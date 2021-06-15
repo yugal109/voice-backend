@@ -52,16 +52,20 @@ const userSchema=new mongoose.Schema({
     userType:{
         type:String,
         enum:["student","teacher"],
-        required:true
+        default:"student"
     },
     isAdmin:{
         type:Boolean,
         default:false
+    },
+    image:{
+        type:String,
+        default:"https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwincomm-cdn-prod-westus.azureedge.net%2Flibs%2Fassets%2Fimg%2Fdefault-user-placeholder.png&f=1&nofb=1"
     }
 })
 
 userSchema.methods.generateToken=function(){
-    const token=jwt.sign({_id:this._id,isAdmin:this.isAdmin},process.env.SECRET_KEY)
+    const token=jwt.sign({_id:this._id,isAdmin:this.isAdmin,userType:this.userType},process.env.SECRET_KEY)
     return token;
 }
 

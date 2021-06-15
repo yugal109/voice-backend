@@ -1,40 +1,59 @@
-const Joi=require("joi")
-const express=require("express")
-const _=require("lodash")
-const bcrypt=require("bcrypt")
-const User=require("../models/Users")
-const asyncHandler=require("express-async-handler")
-const router=express.Router()
+const Joi = require("joi")
+const express = require("express")
+const _ = require("lodash")
+const bcrypt = require("bcrypt")
+const User = require("../models/Users")
+const asyncHandler = require("express-async-handler")
+const router = express.Router()
+const auth = require("../middleware/auth")
+const isTeacher = require("../middleware/isTeacher")
 
-router.get("",(req,res)=>{
-    res.send("Dumb whores.")
-})
+// ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
+router.get("/", [auth, isTeacher], asyncHandler(async (req, res) => {
+    const users = await User.find().sort({ name: 1 })
+    res.send(users)
+}))
 
-router.post("/",asyncHandler(async(req,res)=>{
-    const {value,error}=validate(req.body)
+//ONLY TEACHERS AND THE OWNER CAN VIEW THIS 
+router.get("/:id", [auth], asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id)
+    if (!user) return res.status(404).send("User not found.")
+    console.log(user.userType)
+    if (req.user.userType == "teacher" || user._id == req.user._id) {
+        res.send(user)
+    } else {
+        res.status(403).send("Access Denied.Man")
+    }
+
+}))
+
+
+//CREATING A USER
+router.post("/", asyncHandler(async (req, res) => {
+    const { value, error } = validate(req.body)
     //IF ERROR IN POSTING DATA
-    if(error) return res.send({message:error.details[0].message})
-    
-    const {firstname,lastname,address,username,email,password,userType,phonenumber}=req.body
+    if (error) return res.send({ message: error.details[0].message })
+
+    const { firstname, lastname, address, username, email, password, userType, phonenumber } = req.body
 
     //HASHING THE PASSWORD
-    const salt=await bcrypt.genSalt(10)
-    const hashedPassword=await bcrypt.hash(password,salt)
-    
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
+
     //CREATING USER 
-    const user=new User({
+    const user = new User({
         firstname,
         lastname,
         username,
         email,
-        password:hashedPassword,
+        password: hashedPassword,
         address,
         userType,
-        phonenumber  
+        phonenumber
 
     })
     await user.save()
-    let result=_.pick(user,["firstname","lastname","username","email","address","userType","phonenumber"])
+    let result = _.pick(user, ["firstname", "lastname", "username", "email", "address", "userType", "phonenumber"])
     // result=_.concat(result,user.generateToken())
     res.send(result)
 }
@@ -42,41 +61,41 @@ router.post("/",asyncHandler(async(req,res)=>{
 )
 
 
-module.exports=router;
+module.exports = router;
 
-function validate(data){
-    const schema=Joi.object({
+function validate(data) {
+    const schema = Joi.object({
         firstname: Joi.string()
-        .min(3)
-        .max(30)
-        .required(),
+            .min(3)
+            .max(30)
+            .required(),
 
         lastname: Joi.string()
-        .min(3)
-        .max(30)
-        .required(),
+            .min(3)
+            .max(30)
+            .required(),
 
         username: Joi.string()
-        .alphanum()
-        .min(3)
-        .max(30)
-        .required(),
+            .alphanum()
+            .min(3)
+            .max(30)
+            .required(),
 
         email: Joi.string()
-        .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).required(),
+            .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }).required(),
 
         password: Joi.string()
-        .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
+            .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
 
-        phonenumber:Joi.string().min(5).max(10).required(),
+        phonenumber: Joi.string().min(5).max(10).required(),
 
-        userType:Joi.string().min(5).required(),
+        userType: Joi.string().min(5),
 
         address: Joi.string()
-        .alphanum()
-        .min(5)
-        .max(100)
-        .required(),
+            .alphanum()
+            .min(5)
+            .max(100)
+            .required(),
 
     })
     return schema.validate(data)
