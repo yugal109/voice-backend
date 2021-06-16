@@ -13,9 +13,7 @@ connect();
 app.use(cors())
 //
 
-app.get("/man",(req,res)=>{
-    res.send("Hello")
-})
+
 
 app.use(express.json())
 
