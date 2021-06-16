@@ -14,7 +14,14 @@ router.post("/",asyncHandler(async(req,res)=>{
     if(!validUser) return res.status(404).send("Wrong email or password.")
 
     const token=user.generateToken()
-    res.send(token)
+    res.send({
+        id:user._id,
+        username:user.username,
+        email:user.email,
+        firstname:user.firstname,
+        lastname:user.lastname,
+        token
+    })
 }))
 
 module.exports=router
