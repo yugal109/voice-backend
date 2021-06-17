@@ -45,7 +45,7 @@ const userSchema=new mongoose.Schema({
     },
     address:{
         type:String,
-        min_length:10,
+        min_length:5,
         max_length:100,
         required:true
     },

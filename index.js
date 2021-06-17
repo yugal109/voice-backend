@@ -23,8 +23,6 @@ app.use("/users",UserRegisterRoutes)
 //LOGIN ROUTES
 app.use("/login",LoginRoutes)
 
-
-
 const PORT=process.env.PORT || 5002
 
 app.listen(PORT,()=>{
