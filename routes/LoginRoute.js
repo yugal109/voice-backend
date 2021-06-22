@@ -1,6 +1,6 @@
 const express = require("express")
 const bcrypt = require("bcrypt")
-const jwt=require("jsonwebtoken")
+const jwt = require("jsonwebtoken")
 const { OAuth2Client } = require('google-auth-library');
 const User = require("../models/Users")
 const asyncHandler = require("express-async-handler")
@@ -27,6 +27,7 @@ router.post("/", asyncHandler(async (req, res) => {
         email: user.email,
         firstname: user.firstname,
         lastname: user.lastname,
+        accountType: user.accountType,
         token
     })
 }))
@@ -40,38 +41,41 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
             if (email_verified) {
                 const user = await User.findOne({ email })
                 if (user) {
-                    const token=user.generateToken();
+                    const token = user.generateToken();
                     res.send({
                         id: user._id,
                         username: user.username,
                         email: user.email,
                         firstname: user.firstname,
                         lastname: user.lastname,
+                        accountType: user.accountType,
                         token
                     })
                 } else {
                     const salt = await bcrypt.genSalt(10)
-                    const hashedPassword = await bcrypt.hash(email+process.env.SECRET_KEY, salt)
+                    const hashedPassword = await bcrypt.hash(email + process.env.SECRET_KEY, salt)
 
                     let user = new User({
-                        firstname:given_name,
-                        lastname:family_name,
-                        username:name,
+                        firstname: given_name,
+                        lastname: family_name,
+                        username: name,
                         email,
-                        image:picture,
-                        password:hashedPassword,
-                        address:"No address",
-                        phonenumber:"9800000000",
+                        image: picture,
+                        password: hashedPassword,
                         
+                        address: "No address",
+                        phonenumber: "9800000000",
+
                     })
                     await user.save()
-                    const token=user.generateToken();
+                    const token = user.generateToken();
                     res.send({
                         id: user._id,
                         username: user.username,
                         email: user.email,
                         firstname: user.firstname,
                         lastname: user.lastname,
+                        accountType: user.accountType,
                         token
                     })
                 }
@@ -86,45 +90,49 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
 
 
 router.post("/facebooklogin", asyncHandler(async (req, res) => {
-    const {name,email,picture} = req.body.data;
+    const { name, email, picture } = req.body.data;
 
-    const user=await User.findOne({email})
-    if(user){
-        res.send({id: user._id,
+    const user = await User.findOne({ email })
+    if (user) {
+        res.send({
+            id: user._id,
             username: user.username,
             email: user.email,
             firstname: user.firstname,
             lastname: user.lastname,
-            token:user.generateToken()})
-        
+            token: user.generateToken()
+        })
+
 
     }
-    else{
+    else {
 
 
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(email+process.env.SECRET_KEY, salt)
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(email + process.env.SECRET_KEY, salt)
 
-    const user=new User({
-        firstname:"firstname",
-        lastname:"lastname",
-        username:name,
-        email,
-        password:hashedPassword,
-        image:picture.data.url,
-        address:"No address",
-        phonenumber:"9800000000",
-    })
-    await user.save()
-    const token=jwt.sign({_id:user._id,isAdmin:user.isAdmin,userType:user.userType},
-        process.env.SECRET_KEY)
+        const user = new User({
+            firstname: "firstname",
+            lastname: "lastname",
+            username: name,
+            email,
+            password: hashedPassword,
+            image: picture.data.url,
+            address: "No address",
+            phonenumber: "9800000000",
+        })
+        await user.save()
+        const token = jwt.sign({ _id: user._id, isAdmin: user.isAdmin, userType: user.userType },
+            process.env.SECRET_KEY)
 
-    res.send({id: user._id,
-        username: user.username,
-        email: user.email,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        token})
+        res.send({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            token
+        })
 
 
     }
