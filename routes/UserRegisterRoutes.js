@@ -67,6 +67,7 @@ router.post("/", asyncHandler(async (req, res) => {
 )
 )
 
+//update only for acoount privacy
 router.put("/:id",[auth],asyncHandler(async(req,res)=>{
     const user=await User.findById(req.params.id)
     if(!user) return res.status(404).send("User not found")
@@ -79,6 +80,21 @@ router.put("/:id",[auth],asyncHandler(async(req,res)=>{
         user.accountType="public"
 
     }
+    await user.save()
+    res.send("Updated")
+    }else{
+        res.status(403).send("Not Authorized.")
+    }
+    
+}))
+
+router.put("/all/:id",[auth],asyncHandler(async(req,res)=>{
+    const {username}=req.body
+    const user=await User.findById(req.params.id)
+    if(!user) return res.status(404).send("User not found")
+   
+    if(req.user._id=user._id){
+    user.username=username;
     await user.save()
     res.send("Updated")
     }else{
