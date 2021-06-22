@@ -88,8 +88,19 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
 router.post("/facebooklogin", asyncHandler(async (req, res) => {
     const {name,email,picture} = req.body.data;
 
-    const usr=await User.findOne({email})
-    // if(!usr) res.status(404).send("User with this email doesnot exist.")
+    const user=await User.findOne({email})
+    if(user){
+        res.send({id: user._id,
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            token:user.generateToken()})
+        
+
+    }
+    else{
+
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(email+process.env.SECRET_KEY, salt)
@@ -114,6 +125,9 @@ router.post("/facebooklogin", asyncHandler(async (req, res) => {
         firstname: user.firstname,
         lastname: user.lastname,
         token})
+
+
+    }
 
 }))
 

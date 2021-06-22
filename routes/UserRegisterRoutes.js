@@ -9,18 +9,26 @@ const auth = require("../middleware/auth")
 const isTeacher = require("../middleware/isTeacher")
 
 // ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
-router.get("/", [auth, isTeacher], asyncHandler(async (req, res) => {
+router.get("/", [auth], asyncHandler(async (req, res) => {
     const users = await User.find().sort({ name: 1 })
     res.send(users)
 }))
 
-//ONLY TEACHERS AND THE OWNER CAN VIEW THIS 
+
 router.get("/:id", [auth], asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id)
     if (!user) return res.status(404).send("User not found.")
-    console.log(user.userType)
-    if (req.user.userType == "teacher" || user._id == req.user._id) {
-        res.send(user)
+    
+    if (req.user._id == user._id) {
+        res.send({
+            id:user.id,
+            username:user.username,
+            email:user.email,
+            firstname:user.firstname,
+            lastname:user.lastname,
+            image:user.image
+
+        })
     } else {
         res.status(403).send("Access Denied.Man")
     }
