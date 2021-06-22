@@ -49,10 +49,10 @@ const userSchema=new mongoose.Schema({
         max_length:100,
         required:true
     },
-    userType:{
+    accountType:{
         type:String,
-        enum:["student","teacher"],
-        default:"student"
+        enum:["private","public"],
+        default:"public"  
     },
     isAdmin:{
         type:Boolean,
