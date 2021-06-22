@@ -38,9 +38,17 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
         .then(async (response) => {
             const { email_verified, name, given_name, family_name, email, picture } = response.payload;
             if (email_verified) {
-                const usr = await User.findOne({ email })
-                if (usr) {
-                    res.status(404).send({message:"User with this google account already exists."})
+                const user = await User.findOne({ email })
+                if (user) {
+                    const token=user.generateToken();
+                    res.send({
+                        id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        firstname: user.firstname,
+                        lastname: user.lastname,
+                        token
+                    })
                 } else {
                     const salt = await bcrypt.genSalt(10)
                     const hashedPassword = await bcrypt.hash(email+process.env.SECRET_KEY, salt)
