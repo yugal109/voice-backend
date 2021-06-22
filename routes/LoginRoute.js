@@ -62,7 +62,6 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         email,
                         image: picture,
                         password: hashedPassword,
-                        
                         address: "No address",
                         phonenumber: "9800000000",
 

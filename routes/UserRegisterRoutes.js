@@ -18,15 +18,16 @@ router.get("/", [auth], asyncHandler(async (req, res) => {
 router.get("/:id", [auth], asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id)
     if (!user) return res.status(404).send("User not found.")
-    
+
     if (req.user._id == user._id) {
         res.send({
-            id:user.id,
-            username:user.username,
-            email:user.email,
-            firstname:user.firstname,
-            lastname:user.lastname,
-            image:user.image
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstname: user.firstname,
+            lastname: user.lastname,
+            accountType: user.accountType,
+            image: user.image
 
         })
     } else {
@@ -34,7 +35,6 @@ router.get("/:id", [auth], asyncHandler(async (req, res) => {
     }
 
 }))
-
 
 //CREATING A USER
 router.post("/", asyncHandler(async (req, res) => {
@@ -61,12 +61,31 @@ router.post("/", asyncHandler(async (req, res) => {
 
     })
     await user.save()
-    let result = _.pick(user, ["firstname", "lastname", "username", "email", "address", "userType", "phonenumber"])
-    // result=_.concat(result,user.generateToken())
+    let result = _.pick(user, ["firstname", "lastname", "username", "email", "address", "accountType", "phonenumber"])
     res.send(result)
 }
 )
 )
+
+router.put("/:id",[auth],asyncHandler(async(req,res)=>{
+    const user=await User.findById(req.params.id)
+    if(!user) return res.status(404).send("User not found")
+   
+    if(req.user._id=user._id){
+    if(user.accountType=="public"){
+        user.accountType="private"
+        
+    }else{
+        user.accountType="public"
+
+    }
+    await user.save()
+    res.send("Updated")
+    }else{
+        res.status(403).send("Not Authorized.")
+    }
+    
+}))
 
 
 module.exports = router;
@@ -103,7 +122,7 @@ function validate(data) {
             .alphanum()
             .min(5)
             .max(100)
-            // .required(),
+        // .required(),
 
     })
     return schema.validate(data)
