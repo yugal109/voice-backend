@@ -1,6 +1,7 @@
 const express=require("express")
 const cors=require("cors")
 const app=express()
+const jwt=require("jsonwebtoken")
 const connect=require("./database")
 const UserRegisterRoutes=require("./routes/UserRegisterRoutes")
 const LoginRoutes=require("./routes/LoginRoute")
@@ -8,13 +9,13 @@ require('dotenv').config()
 const socketio=require("socket.io")
 const Chat=require("./models/ChatModel")
 const User=require("./models/Users")
+const auth=require("./middleware/auth")
 connect();
 
 //MIDDLEWARES
 
 //FOR CROSS-ORIGIN
 app.use(cors())
-//
 app.use(express.json())
 
 
@@ -23,6 +24,18 @@ app.use("/users",UserRegisterRoutes)
 
 //LOGIN ROUTES
 app.use("/login",LoginRoutes)
+
+app.post("/create",[auth],(async(req,res)=>{
+    const room=new Chat({
+        admin:req.user
+    })
+
+    await room.save()
+
+    const roomId=jwt.sign({roomid:room._id},process.env.SECRET_KEY)
+    res.send({roomId})
+    
+}))
 
 const PORT=process.env.PORT || 5002
 
@@ -36,8 +49,6 @@ const io=socketio(server, {cors: {
 
 
 io.on("connection",async (socket)=>{
-    console.log("He have a connection")
-    
     socket.on("join",async ({id,room},callback)=>{
 
         const user=await User.findById(id)
@@ -60,10 +71,8 @@ io.on("connection",async (socket)=>{
         const rm=await Chat.findById(information.room)
         rm.messages.push({user:user._id,message:information.message})
         await rm.save();
-        
         io.to(information.room).emit('allmessage',{messages:rm.messages});
     })
-
     socket.on("disconnect",()=>{
         console.log("User was lost.")
     })

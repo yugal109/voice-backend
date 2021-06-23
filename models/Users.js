@@ -65,7 +65,7 @@ const userSchema=new mongoose.Schema({
 })
 
 userSchema.methods.generateToken=function(){
-    const token=jwt.sign({_id:this._id,isAdmin:this.isAdmin,userType:this.userType},process.env.SECRET_KEY)
+    const token=jwt.sign({_id:this._id,isAdmin:this.isAdmin,accountType:this.accountType},process.env.SECRET_KEY)
     return token;
 }
 
