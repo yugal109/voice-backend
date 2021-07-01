@@ -21,7 +21,7 @@ app.use(cors())
 app.use(express.json())
 
 
-const redisClient=Redis.createClient()
+const redisClient=Redis.createClient({url:"https://voice101.herokuapp.com/"})
 const EXPIRATION_TIME=3600;
 
 
