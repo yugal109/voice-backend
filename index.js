@@ -58,17 +58,17 @@ const io=socketio(server, {cors: {
 
 io.on("connection",async (socket)=>{
     socket.on("join",async ({id,room},callback)=>{
-        // redisClient.get("rm",async(error,rm)=>{
-        //     if(error){
-        //         console.error(error)
-        //     }
-        //     if(error!=null){
-        //     const rm=JSON.parse(rm)
-        //     socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
-        //     socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
-        //     socket.emit("allmessage",{messages: rm.messages})
-        //     socket.join(room);
-        //     }else{
+        redisClient.get("rm",async(error,rm)=>{
+            if(error){
+                console.error(error)
+            }
+            if(error!=null){
+            const rm=JSON.parse(rm)
+            socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
+            socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
+            socket.emit("allmessage",{messages: rm.messages})
+            socket.join(room);
+            }else{
             const user=await User.findById(id)
             if(!user) return callback({error:"User doesnot exist"})
 
@@ -84,8 +84,8 @@ io.on("connection",async (socket)=>{
             socket.emit("allmessage",{messages: rm.messages})
             socket.join(room);
 
-        //     }
-        // })
+            }
+        })
 
         
     })
