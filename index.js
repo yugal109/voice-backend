@@ -11,10 +11,15 @@ const Chat=require("./models/ChatModel")
 const User=require("./models/Users")
 const auth=require("./middleware/auth")
 const Redis=require("redis")
+const {promisify}=require("util")
 connect();
 
 
-const redisClient=Redis.createClient({url:"https://voice101.herokuapp.com/"})
+const redisClient=Redis.createClient({
+    host:'127.0.0.1',
+    port:6379
+})
+// const GET_ASYNC=promisify(redisClient.get).bind(redisClient)
 const EXPIRATION_TIME=3600;
 
 //MIDDLEWARES
@@ -22,9 +27,6 @@ const EXPIRATION_TIME=3600;
 //FOR CROSS-ORIGIN
 app.use(cors())
 app.use(express.json())
-
-
-
 
 
 
