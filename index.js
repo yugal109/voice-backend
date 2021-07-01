@@ -13,14 +13,18 @@ const auth=require("./middleware/auth")
 const Redis=require("redis")
 connect();
 
-const redisClient=Redis.createClient()
-const EXPIRATION_TIME=3600;
 
 //MIDDLEWARES
 
 //FOR CROSS-ORIGIN
 app.use(cors())
 app.use(express.json())
+
+
+const redisClient=Redis.createClient()
+const EXPIRATION_TIME=3600;
+
+
 
 
 // REGISTER ROUTES 
