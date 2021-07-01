@@ -17,7 +17,7 @@ connect();
 const port="6379";
 const host="127.0.0.1";
 
-const redisClient=Redis.createClient(host,port)
+const redisClient=Redis.createClient({})
 
 const EXPIRATION_TIME=7600;
 
@@ -42,28 +42,27 @@ app.post("/create",[auth],(async(req,res)=>{
     })
 
     await room.save()
-
     const roomId=jwt.sign({roomid:room._id},process.env.SECRET_KEY)
     res.send({roomId})
     
 }))
 
-app.get("/send/:id",[auth],async(req,res)=>{
-    redisClient.get("Rm",async(error,rm)=>{
-        if(error){
-            console.error(error)
-        }
-        if(rm!=null){
-            res.send(JSON.parse(rm))
-        }else{
-            const rm=await Chat.findById(req.params.id)
-            redisClient.setex("Rm",EXPIRATION_TIME,JSON.stringify(rm.messages))
+// app.get("/send/:id",[auth],async(req,res)=>{
+//     redisClient.get("Rm",async(error,rm)=>{
+//         if(error){
+//             console.error(error)
+//         }
+//         if(rm!=null){
+//             res.send(JSON.parse(rm))
+//         }else{
+//             const rm=await Chat.findById(req.params.id)
+//             redisClient.setex("Rm",EXPIRATION_TIME,JSON.stringify(rm.messages))
 
-            res.send(rm.messages)
-        }
-    })
+//             res.send(rm.messages)
+//         }
+//     })
 
-})
+// })
 
 const PORT=process.env.PORT || 5002
 
