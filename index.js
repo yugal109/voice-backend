@@ -17,7 +17,7 @@ connect();
 const port="6379";
 const host="127.0.0.1";
 
-const redisClient=Redis.createClient({})
+const redisClient=Redis.createClient({host,port})
 
 const EXPIRATION_TIME=7600;
 
