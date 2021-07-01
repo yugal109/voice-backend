@@ -17,7 +17,7 @@ connect();
 const port="6379";
 const host="127.0.0.1";
 
-const redisClient=Redis.createClient()
+const redisClient=Redis.createClient(host,port)
 
 const EXPIRATION_TIME=7600;
 
@@ -84,7 +84,7 @@ io.on("connection",async (socket)=>{
             if(error){
                 console.error(error)
             }
-            if(error!=null){
+            if(rm!=null){
             const rm=JSON.parse(rm)
             socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
             socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
