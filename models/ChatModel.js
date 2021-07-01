@@ -1,5 +1,16 @@
 const mongoose =require("mongoose")
 
+const reactSchema=new mongoose.Schema({
+    user:{
+        type:mongoose.Schema.Types.ObjectId,
+        required:true
+    },
+    reaction:{
+        type:String,
+        enum:["love","like","haha"]
+    }
+})
+
 const messageSchema=new mongoose.Schema({
     user:{
         type:mongoose.Schema.Types.ObjectId,
@@ -8,8 +19,9 @@ const messageSchema=new mongoose.Schema({
     message:{
     type:String,
     min:1
+    },
+    reacts:[reactSchema]
 
-    }
     
 })
 const chatSchema=new mongoose.Schema({

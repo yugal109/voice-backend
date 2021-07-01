@@ -10,7 +10,11 @@ const socketio=require("socket.io")
 const Chat=require("./models/ChatModel")
 const User=require("./models/Users")
 const auth=require("./middleware/auth")
+const Redis=require("redis")
 connect();
+
+const redisClient=Redis.createClient()
+const EXPIRATION_TIME=3600;
 
 //MIDDLEWARES
 
@@ -50,21 +54,56 @@ const io=socketio(server, {cors: {
 
 io.on("connection",async (socket)=>{
     socket.on("join",async ({id,room},callback)=>{
+        // redisClient.get("rm",async(error,rm)=>{
+        //     if(error){
+        //         console.error(error)
+        //     }
+        //     if(error!=null){
+        //     const rm=JSON.parse(rm)
+        //     socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
+        //     socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
+        //     socket.emit("allmessage",{messages: rm.messages})
+        //     socket.join(room);
+        //     }else{
+            const user=await User.findById(id)
+            if(!user) return callback({error:"User doesnot exist"})
 
-        const user=await User.findById(id)
-        if(!user) return callback({error:"User doesnot exist"})
+            const rm=await Chat.findById(room).populate('admin')
+            
+            if(!rm) return callback({error:"This room doesnot exist."})
+
+            redisClient.setex("rm",EXPIRATION_TIME,JSON.stringify(rm))
+            
+            socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
+            socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
+            
+            socket.emit("allmessage",{messages: rm.messages})
+            socket.join(room);
+
+        //     }
+        // })
 
         
-        const rm=await Chat.findById(room).populate('admin')
-        if(!rm) return callback({error:"This room doesnot exist."})
-        
-
-        socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
-        socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
-
-        socket.emit("allmessage",{messages: rm.messages})
-        socket.join(room);
     })
+
+    // socket.on("individul_reaction",async ({room,msgid})=>{
+    //     const rm=await Chat.findById(room)
+    //     const rxn=rm.messages.find(e=>e._id==msgid).reacts
+    //     io.emit("rxn",{rxn})
+    // })
+
+
+    // socket.on("reacting",async(data)=>{
+    //     const rm=await Chat.findById(data.room)
+    //     const msg=rm.messages.find(e=>e._id==data.msgid)
+    //     msg.reacts.push({user:data.id,reaction:data.react})
+    //     await rm.save()
+    //     // io.to(data.room)("allmessage",{messages: rm.messages})
+    //     const rxn=rm.messages.find(e=>e._id==data.msgid).reacts
+    //     io.emit("rxn",{rxn})
+    // })
+
+    
 
     socket.on("sendMessage",async (information,callback)=>{
         const user=await User.findById(information.id);
@@ -73,6 +112,11 @@ io.on("connection",async (socket)=>{
         await rm.save();
         io.to(information.room).emit('allmessage',{messages:rm.messages});
     })
+
+    socket.on("yugal",(data)=>{
+        console.log("TYPING.........")
+    })
+
     socket.on("disconnect",()=>{
         console.log("User was lost.")
     })
