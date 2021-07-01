@@ -14,13 +14,13 @@ const Redis=require("redis")
 const {promisify}=require("util")
 connect();
 
+const port="6379";
+const host="127.0.0.1";
 
-const redisClient=Redis.createClient({
-    host:'127.0.0.1',
-    port:6379
-})
-// const GET_ASYNC=promisify(redisClient.get).bind(redisClient)
-const EXPIRATION_TIME=3600;
+const redisClient=Redis.createClient()
+
+const EXPIRATION_TIME=7600;
+
 
 //MIDDLEWARES
 
@@ -48,6 +48,23 @@ app.post("/create",[auth],(async(req,res)=>{
     
 }))
 
+app.get("/send/:id",[auth],async(req,res)=>{
+    redisClient.get("Rm",async(error,rm)=>{
+        if(error){
+            console.error(error)
+        }
+        if(rm!=null){
+            res.send(JSON.parse(rm))
+        }else{
+            const rm=await Chat.findById(req.params.id)
+            redisClient.setex("Rm",EXPIRATION_TIME,JSON.stringify(rm.messages))
+
+            res.send(rm.messages)
+        }
+    })
+
+})
+
 const PORT=process.env.PORT || 5002
 
 const server=app.listen(PORT,()=>{
@@ -57,6 +74,8 @@ const server=app.listen(PORT,()=>{
 const io=socketio(server, {cors: {
     origin: '*',
   }})
+
+
 
 
 io.on("connection",async (socket)=>{
@@ -72,6 +91,7 @@ io.on("connection",async (socket)=>{
             socket.emit("allmessage",{messages: rm.messages})
             socket.join(room);
             }else{
+                
             const user=await User.findById(id)
             if(!user) return callback({error:"User doesnot exist"})
 
