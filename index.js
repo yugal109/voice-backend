@@ -14,6 +14,9 @@ const Redis=require("redis")
 connect();
 
 
+const redisClient=Redis.createClient({url:"https://voice101.herokuapp.com/"})
+const EXPIRATION_TIME=3600;
+
 //MIDDLEWARES
 
 //FOR CROSS-ORIGIN
@@ -56,7 +59,17 @@ const io=socketio(server, {cors: {
 
 io.on("connection",async (socket)=>{
     socket.on("join",async ({id,room},callback)=>{
-       
+        redisClient.get("rm",async(error,rm)=>{
+            if(error){
+                console.error(error)
+            }
+            if(error!=null){
+            const rm=JSON.parse(rm)
+            socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
+            socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
+            socket.emit("allmessage",{messages: rm.messages})
+            socket.join(room);
+            }else{
             const user=await User.findById(id)
             if(!user) return callback({error:"User doesnot exist"})
 
@@ -64,7 +77,7 @@ io.on("connection",async (socket)=>{
             
             if(!rm) return callback({error:"This room doesnot exist."})
 
-            
+            redisClient.setex("rm",EXPIRATION_TIME,JSON.stringify(rm))
             
             socket.emit("message",{user:rm.admin.username,text:`Welcome ${user.username} `})
             socket.broadcast.to(room).emit("message",{user:rm.admin.username,text:`${user.username} has joined the chat.`})
@@ -72,8 +85,8 @@ io.on("connection",async (socket)=>{
             socket.emit("allmessage",{messages: rm.messages})
             socket.join(room);
 
-            
-        
+            }
+        })
 
         
     })
