@@ -6,8 +6,7 @@ const React=require('../models/ReactionModel')
 
 router.get("/:msgid",asyncHandler(async(req,res)=>{
     const react=await React.find({messageId:req.params.msgid})
-    console.log(req.params.msgid)
-    res.send(react)
+    res.send(react.length)
    
 }))
 
