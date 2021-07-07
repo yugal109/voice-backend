@@ -3,15 +3,9 @@ const jwt=require("jsonwebtoken")
 require('dotenv').config()
 
 const userSchema=new mongoose.Schema({
-    firstname:{
+    fullname:{
         type:String,
         min_length:3,
-        max_length:255,
-        required:true
-    },
-    lastname:{
-        type:String,
-        min_length:1,
         max_length:255,
         required:true
     },
@@ -25,28 +19,11 @@ const userSchema=new mongoose.Schema({
         type:String,
         unique:true,
         required:true
-        // validate:{
-        //     validator:function(value){
-
-        //     }
-        // }
     },
     password:{
         type:String,
         min_length:10,
         max_length:500,
-        required:true
-    },
-    phonenumber:{
-        type:String,
-        min_length:10,
-        max_length:10,
-        required:true
-    },
-    address:{
-        type:String,
-        min_length:5,
-        max_length:100,
         required:true
     },
     accountType:{

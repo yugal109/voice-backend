@@ -24,8 +24,7 @@ router.get("/:id", [auth], asyncHandler(async (req, res) => {
             id: user.id,
             username: user.username,
             email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            fullname:user.fullname,
             accountType: user.accountType,
             image: user.image
 
@@ -42,7 +41,7 @@ router.post("/", asyncHandler(async (req, res) => {
     //IF ERROR IN POSTING DATA
     if (error) return res.send({ message: error.details[0].message })
 
-    const { firstname, lastname, address, username, email, password, userType, phonenumber } = req.body
+    const { fullname, username, email, password, userType } = req.body
 
     //HASHING THE PASSWORD
     const salt = await bcrypt.genSalt(10)
@@ -50,18 +49,16 @@ router.post("/", asyncHandler(async (req, res) => {
 
     //CREATING USER 
     const user = new User({
-        firstname,
-        lastname,
+        fullname,
         username,
         email,
         password: hashedPassword,
-        address,
-        userType,
-        phonenumber
+        userType
+        
 
     })
     await user.save()
-    let result = _.pick(user, ["firstname", "lastname", "username", "email", "address", "accountType", "phonenumber"])
+    let result = _.pick(user, ["fullname", "username", "email", "address", "accountType"])
     res.send(result)
 }
 )
@@ -108,12 +105,7 @@ module.exports = router;
 
 function validate(data) {
     const schema = Joi.object({
-        firstname: Joi.string()
-            .min(3)
-            .max(30)
-            .required(),
-
-        lastname: Joi.string()
+        fullname: Joi.string()
             .min(3)
             .max(30)
             .required(),
@@ -130,15 +122,9 @@ function validate(data) {
         password: Joi.string()
             .pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required(),
 
-        phonenumber: Joi.string().min(5).max(10).required(),
-
         userType: Joi.string().min(5),
 
-        address: Joi.string()
-            .alphanum()
-            .min(5)
-            .max(100)
-        // .required(),
+        
 
     })
     return schema.validate(data)

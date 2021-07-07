@@ -25,8 +25,7 @@ router.post("/", asyncHandler(async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        firstname: user.firstname,
-        lastname: user.lastname,
+        fullname: user.fullname,
         accountType: user.accountType,
         token
     })
@@ -46,8 +45,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         id: user._id,
                         username: user.username,
                         email: user.email,
-                        firstname: user.firstname,
-                        lastname: user.lastname,
+                        fullname: user.fullname,
                         accountType: user.accountType,
                         token
                     })
@@ -56,14 +54,11 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                     const hashedPassword = await bcrypt.hash(email + process.env.SECRET_KEY, salt)
 
                     let user = new User({
-                        firstname: given_name,
-                        lastname: family_name,
+                        fullname:given_name+" "+family_name,
                         username: name,
                         email,
                         image: picture,
                         password: hashedPassword,
-                        address: "No address",
-                        phonenumber: "9800000000",
 
                     })
                     await user.save()
@@ -72,8 +67,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         id: user._id,
                         username: user.username,
                         email: user.email,
-                        firstname: user.firstname,
-                        lastname: user.lastname,
+                        firstname: user.fullname,
                         accountType: user.accountType,
                         token
                     })
@@ -97,8 +91,7 @@ router.post("/facebooklogin", asyncHandler(async (req, res) => {
             id: user._id,
             username: user.username,
             email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            fullname: user.fullname,
             token: user.generateToken()
         })
 
@@ -111,15 +104,13 @@ router.post("/facebooklogin", asyncHandler(async (req, res) => {
         const hashedPassword = await bcrypt.hash(email + process.env.SECRET_KEY, salt)
 
         const user = new User({
-            firstname: "firstname",
-            lastname: "lastname",
+            fullname: "fullname",
             username: name,
             email,
             password: hashedPassword,
             image: picture.data.url,
-            address: "No address",
-            phonenumber: "9800000000",
         })
+
         await user.save()
         const token = jwt.sign({ _id: user._id, isAdmin: user.isAdmin, userType: user.userType },
             process.env.SECRET_KEY)
@@ -128,8 +119,7 @@ router.post("/facebooklogin", asyncHandler(async (req, res) => {
             id: user._id,
             username: user.username,
             email: user.email,
-            firstname: user.firstname,
-            lastname: user.lastname,
+            firstname: user.fullname,
             token
         })
 
