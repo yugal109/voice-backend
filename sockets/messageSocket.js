@@ -30,6 +30,7 @@ function messageSocket(io){
         socket.on("sendMessage", async (information, callback) => {
           const user = await User.findById(information.id);
           const rm = await Chat.findById(information.room);
+          rm.users.push({userId:user._id})
           rm.messages.push({ user: user._id, message: information.message });
           await rm.save();
           io.to(information.room).emit("allmessage", { messages: rm.messages });

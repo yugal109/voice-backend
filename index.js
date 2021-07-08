@@ -11,6 +11,9 @@ const socketio = require("socket.io");
 const Chat = require("./models/ChatModel");
 const auth = require("./middleware/auth");
 const messageSocket=require("./sockets/messageSocket")
+const asyncHandler = require("express-async-handler");
+
+
 connect();
 
 
@@ -29,15 +32,23 @@ app.use("/login", LoginRoutes);
 //REACTION ROUTES
 app.use("/react",ReactionRoutes)
 
-app.post("/create", [auth], async (req, res) => {
+//CREATING CHAT ROOM
+app.post("/create", [auth],asyncHandler(async (req, res) => {
   const room = new Chat({
     admin: req.user,
+    name:req.body.name
   });
-
   await room.save();
   const roomId = jwt.sign({ roomid: room._id }, process.env.SECRET_KEY);
   res.send({ roomId });
-});
+}));
+
+//INBOX DATA
+app.post("/inbox",asyncHandler(async(req,res)=>{
+  console.log(req.body)
+  const inboxlist=await Chat.find({admin:req.body.id})
+  res.send(inboxlist)
+}))
 
 const PORT = process.env.PORT || 5002;
 

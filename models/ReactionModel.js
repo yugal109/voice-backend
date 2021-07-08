@@ -19,6 +19,5 @@ const reactSchema=new mongoose.Schema({
     }
 })
 
-
 const React=mongoose.model("React",reactSchema)
 module.exports=React
