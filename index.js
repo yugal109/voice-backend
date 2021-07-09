@@ -5,17 +5,16 @@ const jwt = require("jsonwebtoken");
 const connect = require("./database");
 const UserRegisterRoutes = require("./routes/UserRegisterRoutes");
 const LoginRoutes = require("./routes/LoginRoute");
-const ReactionRoutes=require("./routes/ReactionRoutes")
+const ReactionRoutes = require("./routes/ReactionRoutes");
 require("dotenv").config();
 const socketio = require("socket.io");
 const Chat = require("./models/ChatModel");
 const auth = require("./middleware/auth");
-const messageSocket=require("./sockets/messageSocket")
+const messageSocket = require("./sockets/messageSocket");
+const LikeSocket = require("./sockets/LikeSocket");
 const asyncHandler = require("express-async-handler");
 
-
 connect();
-
 
 //MIDDLEWARES
 
@@ -30,25 +29,32 @@ app.use("/users", UserRegisterRoutes);
 app.use("/login", LoginRoutes);
 
 //REACTION ROUTES
-app.use("/react",ReactionRoutes)
+app.use("/react", ReactionRoutes);
 
 //CREATING CHAT ROOM
-app.post("/create", [auth],asyncHandler(async (req, res) => {
-  const room = new Chat({
-    admin: req.user,
-    name:req.body.name
-  });
-  await room.save();
-  const roomId = jwt.sign({ roomid: room._id }, process.env.SECRET_KEY);
-  res.send({ roomId });
-}));
+app.post(
+  "/create",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const room = new Chat({
+      admin: req.user,
+      name: req.body.name,
+    });
+    await room.save();
+    const roomId = jwt.sign({ roomid: room._id }, process.env.SECRET_KEY);
+    res.send({ roomId });
+  })
+);
 
 //INBOX DATA
-app.post("/inbox",asyncHandler(async(req,res)=>{
-  console.log(req.body)
-  const inboxlist=await Chat.find({admin:req.body.id})
-  res.send(inboxlist)
-}))
+app.post(
+  "/inbox",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const inboxlist = await Chat.find({ admin: req.body.id });
+    res.send(inboxlist);
+  })
+);
 
 const PORT = process.env.PORT || 5002;
 
@@ -62,9 +68,7 @@ const io = socketio(server, {
   },
 });
 
-messageSocket(io)
+const newIo = io.of("/reactions");
 
-
-
-
-
+messageSocket(io);
+LikeSocket(io);

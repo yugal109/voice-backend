@@ -15,7 +15,7 @@ router.post(
   "/",
   asyncHandler(async (req, res) => {
     const { messageId, userId, reacts } = req.body;
-    let react = await React.findOne({ messageId });
+    let react = await React.findOne({ messageId,userId });
     if (react) {
       if (react.reacts == reacts) {
         await React.deleteOne({ messageId, userId });
