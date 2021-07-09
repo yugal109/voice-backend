@@ -35,7 +35,7 @@ function LikeSocket(io) {
     });
 
     socket.on("disconnect", () => {
-      console.log("Reaction is list.");
+      console.log("Reaction is lost.");
     });
   });
 }
