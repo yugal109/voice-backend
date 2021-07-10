@@ -19,7 +19,7 @@ router.get("/:id", [auth], asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id)
     if (!user) return res.status(404).send("User not found.")
 
-    if (req.user._id == user._id) {
+   
         res.send({
             id: user.id,
             username: user.username,
@@ -29,9 +29,7 @@ router.get("/:id", [auth], asyncHandler(async (req, res) => {
             image: user.image
 
         })
-    } else {
-        res.status(403).send("Access Denied.Man")
-    }
+    
 
 }))
 
@@ -69,7 +67,7 @@ router.put("/:id",[auth],asyncHandler(async(req,res)=>{
     const user=await User.findById(req.params.id)
     if(!user) return res.status(404).send("User not found")
    
-    if(req.user._id=user._id){
+    if(req.user._id==user._id){
     if(user.accountType=="public"){
         user.accountType="private"
         

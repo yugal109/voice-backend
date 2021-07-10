@@ -56,6 +56,25 @@ app.post(
   })
 );
 
+//USERS IN ROOM
+app.get(
+  "/users_in_room/:roomid",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const usersList = await Chat.findById(req.params.roomid).populate({
+      path:"users",model:"User",
+      populate:[
+        {
+          path:"userId",model:"User"
+        }
+      ]
+    });
+    const admin=await Chat.findById(req.params.roomid).select({admin:1}).populate("admin")
+    res.send({usersList:usersList,admin:admin});
+  })
+);
+
+
 const PORT = process.env.PORT || 5002;
 
 const server = app.listen(PORT, () => {
