@@ -52,7 +52,6 @@ router.post("/", asyncHandler(async (req, res) => {
         email,
         password: hashedPassword,
         userType
-        
 
     })
     await user.save()

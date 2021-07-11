@@ -27,6 +27,7 @@ router.post("/", asyncHandler(async (req, res) => {
         email: user.email,
         fullname: user.fullname,
         accountType: user.accountType,
+        image:user.image,
         token
     })
 }))
@@ -47,6 +48,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         email: user.email,
                         fullname: user.fullname,
                         accountType: user.accountType,
+                        image:user.image,
                         token
                     })
                 } else {
