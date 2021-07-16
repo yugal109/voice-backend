@@ -2,6 +2,14 @@ const mongoose=require("mongoose")
 const jwt=require("jsonwebtoken")
 require('dotenv').config()
 
+const friendsSchema=new mongoose.Schema({
+    userId:{
+        type:mongoose.Schema.Types.ObjectId,
+        required:true,
+        ref:"User"
+    }
+})
+
 const userSchema=new mongoose.Schema({
     fullname:{
         type:String,
@@ -38,14 +46,14 @@ const userSchema=new mongoose.Schema({
     image:{
         type:String,
         default:"https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwincomm-cdn-prod-westus.azureedge.net%2Flibs%2Fassets%2Fimg%2Fdefault-user-placeholder.png&f=1&nofb=1"
-    }
+    },
+    friends:[friendsSchema]
 })
 
 userSchema.methods.generateToken=function(){
     const token=jwt.sign({_id:this._id,isAdmin:this.isAdmin,accountType:this.accountType},process.env.SECRET_KEY)
     return token;
 }
-
 
 const User=mongoose.model("User",userSchema)
 

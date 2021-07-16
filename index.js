@@ -6,12 +6,16 @@ const connect = require("./database");
 const UserRegisterRoutes = require("./routes/UserRegisterRoutes");
 const LoginRoutes = require("./routes/LoginRoute");
 const ReactionRoutes = require("./routes/ReactionRoutes");
+const RequestRoutes=require("./routes/RequestRoute")
 require("dotenv").config();
 const socketio = require("socket.io");
 const Chat = require("./models/ChatModel");
+const User=require("./models/Users")
+const React=require("./models/ReactionModel")
 const auth = require("./middleware/auth");
 const messageSocket = require("./sockets/messageSocket");
 const LikeSocket = require("./sockets/LikeSocket");
+const requestSocket=require("./sockets/requestSocket")
 const asyncHandler = require("express-async-handler");
 
 connect();
@@ -30,6 +34,37 @@ app.use("/login", LoginRoutes);
 
 //REACTION ROUTES
 app.use("/react", ReactionRoutes);
+
+//REQUEST ROUTES
+app.use("/requests",RequestRoutes)
+
+//GET SEARCHED USERS
+app.get(
+  "/search",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const username=req.query.username
+    const users=await User.find({"username" : { $regex:username, $options:"$i" }})
+    res.send(users)
+  })
+);
+
+//GET FRIENDS
+app.get(
+  "/friends/:userId",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const users=await User.findById(req.params.userId).populate({
+      path:"friends",
+      populate:[
+        {path:"userId",model:"User"}
+      ]
+    })
+    res.send(users.friends)
+  })
+);
+
+
 
 //CREATING CHAT ROOM
 app.post(
@@ -74,6 +109,21 @@ app.get(
   })
 );
 
+//REACTIONS IN MESSAGE
+app.get(
+  "/reactions/:messageid",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const reactionList = await React.find({messageId:req.params.messageid})
+    .populate({
+      path:"userId",model:"User"
+    });
+    res.send(reactionList);
+  })
+);
+
+
+
 
 const PORT = process.env.PORT || 5002;
 
@@ -81,13 +131,14 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on the port ${PORT}`);
 });
 
+
 const io = socketio(server, {
   cors: {
     origin: "*",
   },
 });
-
-const newIo = io.of("/reactions");
+app.set("socketio",io)
 
 messageSocket(io);
 LikeSocket(io);
+requestSocket(io)
