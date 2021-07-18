@@ -17,7 +17,7 @@ const userListSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: "User",
-  },
+  }
 });
 
 const chatSchema = new mongoose.Schema({
@@ -32,6 +32,12 @@ const chatSchema = new mongoose.Schema({
     ref: "User",
   },
   users: [userListSchema],
+  roomType:{
+    type:String,
+    required:true,
+    enum:["open","closed"],
+    default:"closed"
+  },
   messages: [
     messageSchema,
     {

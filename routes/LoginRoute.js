@@ -37,7 +37,8 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
     const tokenId = req.body.tokenId;
     client.verifyIdToken({ idToken: tokenId, audience: process.env.CLIENT_ID })
         .then(async (response) => {
-            const { email_verified, name, given_name, family_name, email, picture } = response.payload;
+            const { email_verified, name, given_name,image, family_name, email, picture } = response.payload;
+            console.log(image)
             if (email_verified) {
                 const user = await User.findOne({ email })
                 if (user) {
@@ -61,6 +62,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         email,
                         image: picture,
                         password: hashedPassword,
+                        image:image
 
                     })
                     await user.save()
@@ -71,6 +73,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
                         email: user.email,
                         firstname: user.fullname,
                         accountType: user.accountType,
+                        image:user.image,
                         token
                     })
                 }

@@ -72,21 +72,21 @@ app.post(
   [auth],
   asyncHandler(async (req, res) => {
     const room = new Chat({
-      admin: req.user,
+      admin: req.user._id,
       name: req.body.name,
     });
     await room.save();
-    const roomId = jwt.sign({ roomid: room._id }, process.env.SECRET_KEY);
-    res.send({ roomId });
+    // const roomId = jwt.sign({ roomid: room._id }, process.env.SECRET_KEY);
+    res.send(room)
   })
 );
 
 //INBOX DATA
-app.post(
+app.get(
   "/inbox",
   [auth],
   asyncHandler(async (req, res) => {
-    const inboxlist = await Chat.find({ admin: req.body.id });
+    const inboxlist = await Chat.find({ admin: req.user._id });
     res.send(inboxlist);
   })
 );
@@ -106,6 +106,21 @@ app.get(
     });
     const admin=await Chat.findById(req.params.roomid).select({admin:1}).populate("admin")
     res.send({usersList:usersList,admin:admin});
+  })
+);
+
+//users is present or not
+app.get(
+  "/user_in_room/:roomid",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const chat = await Chat.findById(req.params.roomid)
+    const user=chat?.users.find(e=>e.userId==req.user._id)
+    if(chat.admin==req.user._id || user){
+      res.send(true);
+    }else{
+      res.send(false)
+    }
   })
 );
 

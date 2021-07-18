@@ -16,13 +16,14 @@ function messageSocket(io) {
           },
         ],
       });
-      const userExist = rm?.users?.find((users) => users?.userId == id);
+      socket.emit("room",rm)
+      // const userExist = rm?.users?.find((users) => users?.userId == id);
 
-      if (!userExist && rm?.admin._id != id) {
-        console.log("Creating.....");
-        rm?.users.push({ userId: id });
-        await rm?.save();
-      }
+      // if (!userExist && rm?.admin._id != id) {
+      //   rm?.users.push({ userId: id });
+      //   await rm?.save();
+      // }
+      
       if (!rm) return callback({ error: "This room doesnot exist." });
 
       socket.emit("message", {
@@ -52,6 +53,7 @@ function messageSocket(io) {
         ],
       });
       io.to(information.room).emit("allmessage", { messages: RM?.messages });
+     
     });
 
     socket.on("yugal", (data) => {

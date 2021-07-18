@@ -22,9 +22,9 @@ const requestSchema = new mongoose.Schema({
       required:true,
       default:"pending"
   },
-  link:{
-    type:String,
-    maxlength:500,
+  roomId:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Chat",
   },
   roomName:{
     type:String,

@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const Request = require("../models/RequestModel");
 const User = require("../models/Users");
 const io = require("../index");
+const Chat = require("../models/ChatModel");
 
 router.get(
   "/addfriend",
@@ -94,6 +95,7 @@ router.post(
   [auth],
   asyncHandler(async (req, res) => {
     const { requestType, requestor, acceptor } = req.body;
+    
     const request = new Request({
       requestType,
       requestor,
@@ -137,17 +139,19 @@ router.post(
   "/invite",
   [auth],
   asyncHandler(async (req, res) => {
-    const { acceptor, requestor, link, roomName } = req.body;
+    
+    const { acceptor, requestor, roomId, roomName } = req.body;
     const request = new Request({
       acceptor: acceptor,
       requestType: "invitation",
       requestor: requestor,
-      link,
+      roomId,
       roomName,
     });
     await request.save();
     const requests = await Request.find({ acceptor, status: "pending" });
-    const io = req.app.get("socketio");
+    console.log(requests)
+
     io.of("/requests").to(acceptor).emit("notifications", requests.length);
     res.send(requests);
   })
@@ -171,6 +175,9 @@ router.post(
   [auth],
   asyncHandler(async (req, res) => {
     const acceptor = req.body.acceptor;
+    const chat =await Chat.findById(req.body.roomId)
+    chat?.users.push({userId:req.user._id})
+    await chat.save();
     const request = await Request.findById(req.params.id);
     request.status = "accepted";
     await request.save();
