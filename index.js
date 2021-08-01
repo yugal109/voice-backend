@@ -12,11 +12,13 @@ const socketio = require("socket.io");
 const Chat = require("./models/ChatModel");
 const User=require("./models/Users")
 const React=require("./models/ReactionModel")
+const Request=require("./models/RequestModel")
 const auth = require("./middleware/auth");
 const messageSocket = require("./sockets/messageSocket");
 const LikeSocket = require("./sockets/LikeSocket");
 const requestSocket=require("./sockets/requestSocket")
 const asyncHandler = require("express-async-handler");
+const client=require("./cache/redis")
 
 connect();
 
@@ -123,6 +125,39 @@ app.get(
     }
   })
 );
+
+//removing users from chat room
+app.get(
+  "/remove_user/:roomid",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const chat = await Chat.findById(req.params.roomid)
+    const users=chat?.users.filter(e=>e.userId==req.user._id)
+    chat.users=users;
+    await chat.save();
+    res.send("Removed")
+  })
+);
+
+//removing friends
+app.post(
+  "/remove_friend",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const {friend}=req.body
+    const user=await User.findById(friend)
+    console.log(user)
+    const frnd=user.friends?.filter(e=>e.userId!=req.user._id)
+    user.friends=frnd;
+    await user.save();
+    const request=await Request.findOneAndDelete({requestor:req.user._id,acceptor:friend,requestType:"friend_request"})
+    console.log(request)
+    res.send("removed")
+    
+  })
+);
+
+
 
 //REACTIONS IN MESSAGE
 app.get(

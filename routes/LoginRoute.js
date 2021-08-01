@@ -37,8 +37,7 @@ router.post("/googlelogin", asyncHandler(async (req, res) => {
     const tokenId = req.body.tokenId;
     client.verifyIdToken({ idToken: tokenId, audience: process.env.CLIENT_ID })
         .then(async (response) => {
-            const { email_verified, name, given_name,image, family_name, email, picture } = response.payload;
-            console.log(image)
+            const { email_verified, name, given_name,picture:image, family_name, email, picture } = response.payload;
             if (email_verified) {
                 const user = await User.findOne({ email })
                 if (user) {

@@ -7,6 +7,7 @@ const Request = require("../models/RequestModel");
 const asyncHandler = require("express-async-handler");
 const router = express.Router();
 const auth = require("../middleware/auth");
+const client = require("../cache/redis");
 
 // ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
 router.get(
@@ -74,9 +75,16 @@ router.get(
   "/accountType/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send("User not found");
-    res.send({ accountType: user.accountType });
+    client.get("accountType", async (error, aType) => {
+      if (aType != null) {
+        res.send({ accountType: JSON.parse(aType) });
+      } else {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User not found");
+        client.setex("accountType", 3600, JSON.stringify(user.accountType));
+        res.send({ accountType: user.accountType });
+      }
+    });
   })
 );
 
@@ -95,8 +103,8 @@ router.get(
   "/isfriend/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    let user = await User.findById(req.user._id);
-    const isFriend = user.friends.find((e) => e.userId == req.params.id);
+    const user = await User.findById(req.params.id);
+    const isFriend = user.friends.find((e) => e.userId == req.user._id);
 
     const requests = await Request.findOne({
       requestor: req.user._id,
@@ -136,16 +144,48 @@ router.put(
   })
 );
 
+router.get(
+  "/imageurl/:id",
+  [auth],
+  asyncHandler(async (req, res) => {
+
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User not found");
+
+        res.send(user.image);
+
+  })
+);
+
+router.put(
+  "/imageurl/:id",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const { url } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).send("User not found");
+    if (req.user._id == user._id) {
+      user.image = url;
+      await user.save();
+      res.send("Updated Image");
+    }
+  })
+);
+
 router.put(
   "/all/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    const { username } = req.body;
+    const { username, url } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).send("User not found");
-
+    console.log("The Url is : ", url);
     if ((req.user._id = user._id)) {
       user.username = username;
+      if (url) {
+        user.image = url;
+        console.log("The url is", url);
+      }
       await user.save();
       res.send("Updated");
     } else {

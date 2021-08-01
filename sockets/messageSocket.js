@@ -1,41 +1,63 @@
 const User = require("../models/Users");
 const Chat = require("../models/ChatModel");
+const client = require("../cache/redis");
 
 function messageSocket(io) {
   io.on("connection", async (socket) => {
     socket.on("join", async ({ id, room }, callback) => {
-      const user = await User.findById(id);
-      if (!user) return callback({ error: "User doesnot exist" });
+      client.get("chats", async (error, rm) => {
+        if (rm != null) {
+          if (!rm) return callback({ error: "This room doesnot exist." });
 
-      const rm = await Chat.findById(room).populate({
-        path: "messages",
-        populate: [
-          {
-            path: "user",
-            model: "User",
-          },
-        ],
-      });
-      socket.emit("room",rm)
-      // const userExist = rm?.users?.find((users) => users?.userId == id);
+          socket.emit("message", {
+            user: rm?.admin.username,
+            text: `Welcome ${user.username} `,
+          });
+          socket.broadcast.to(room).emit("message", {
+            user: rm?.admin.username,
+            text: `${user.username} has joined the chat.`,
+          });
 
-      // if (!userExist && rm?.admin._id != id) {
-      //   rm?.users.push({ userId: id });
-      //   await rm?.save();
-      // }
-      
-      if (!rm) return callback({ error: "This room doesnot exist." });
+          socket.emit("allmessage", { messages: JSON.parse(rm) });
+          socket.join(room);
 
-      socket.emit("message", {
-        user: rm?.admin.username,
-        text: `Welcome ${user.username} `,
+        } else {
+          const user = await User.findById(id);
+          if (!user) return callback({ error: "User doesnot exist" });
+
+          const rm = await Chat.findById(room).populate({
+            path: "messages",
+            populate: [
+              {
+                path: "user",
+                model: "User",
+              },
+            ],
+          });
+          socket.emit("room", rm);
+          // const userExist = rm?.users?.find((users) => users?.userId == id);
+
+          // if (!userExist && rm?.admin._id != id) {
+          //   rm?.users.push({ userId: id });
+          //   await rm?.save();
+          // }
+
+          if (!rm) return callback({ error: "This room doesnot exist." });
+
+          socket.emit("message", {
+            user: rm?.admin.username,
+            text: `Welcome ${user.username} `,
+          });
+          socket.broadcast.to(room).emit("message", {
+            user: rm?.admin.username,
+            text: `${user.username} has joined the chat.`,
+          });
+
+          client.setex("rm", 3600, JSON.stringify(rm.messages));
+          socket.emit("allmessage", { messages: rm?.messages });
+          socket.join(room);
+        }
       });
-      socket.broadcast.to(room).emit("message", {
-        user: rm?.admin.username,
-        text: `${user.username} has joined the chat.`,
-      });
-      socket.emit("allmessage", { messages: rm?.messages });
-      socket.join(room);
     });
 
     socket.on("sendMessage", async (information, callback) => {
@@ -53,7 +75,6 @@ function messageSocket(io) {
         ],
       });
       io.to(information.room).emit("allmessage", { messages: RM?.messages });
-     
     });
 
     socket.on("yugal", (data) => {

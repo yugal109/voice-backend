@@ -31,7 +31,7 @@ const requestSchema = new mongoose.Schema({
     maxlength:100
   }
 
-});
+},{timestamps:true});
 
 const Request = mongoose.model("Request", requestSchema);
 

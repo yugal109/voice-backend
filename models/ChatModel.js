@@ -10,7 +10,7 @@ const messageSchema = new mongoose.Schema({
     type: String,
     min: 1,
   },
-});
+},{timestamps:true});
 
 const userListSchema = new mongoose.Schema({
   userId: {
