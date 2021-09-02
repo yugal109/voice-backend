@@ -7,6 +7,18 @@ const User = require("../models/Users");
 const io = require("../index");
 const Chat = require("../models/ChatModel");
 
+router.get("/",[auth],asyncHandler(async(req,res)=>{
+
+   const requests=await Request.find({
+     acceptor:req.user._id,
+     status:"pending"
+   }).populate('requestor')
+  //  console.log(requests)
+
+
+   res.send(requests)
+}))
+
 router.get(
   "/addfriend",
   [auth],
@@ -43,19 +55,19 @@ router.post(
     });
     request.status = "accepted";
     await request.save();
-    let other = await User.findById(requestor);
-    other.friends.push({ userId: req.user._id });
+    let other = await User.findById(req.user._id);
+    other.friends.push({ userId:requestor  });
     await other.save();
-    const noti = await Request.find({
-      acceptor: req.user._id,
-      // requestType: "friend_request",
-      status: "pending",
-    });
+    // const noti = await Request.find({
+    //   acceptor: req.user._id,
+    //   // requestType: "friend_request",
+    //   status: "pending",
+    // });
 
-    const io = req.app.get("socketio");
-    io.of("/requests").to(req.user._id).emit("notifications", noti.length);
-    io.of("/requests").to(requestor).emit("accepted", "Accepted");
-    io.of("/requests").to();
+    // const io = req.app.get("socketio");
+    // io.of("/requests").to(req.user._id).emit("notifications", noti.length);
+    // io.of("/requests").to(requestor).emit("accepted", "Accepted");
+    // io.of("/requests").to();
     res.send(request);
   })
 );
@@ -64,15 +76,15 @@ router.delete(
   "/deleterequest/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    const requests = await Request.findOneAndDelete({ _id: req.params.id });
-    console.log(req.user);
-    const noti = await Request.find({
-      acceptor: req.user._id,
-      requestType: "friend_request",
-      status: "pending",
-    });
-    const io = req.app.get("socketio");
-    io.of("/requests").to(req.user._id).emit("notifications", noti.length);
+    const requests = await Request.findByIdAndDelete(req.params.id);
+    // console.log(req.user);
+    // const noti = await Request.find({
+    //   acceptor: req.user._id,
+    //   requestType: "friend_request",
+    //   status: "pending",
+    // });
+    // const io = req.app.get("socketio");
+    // io.of("/requests").to(req.user._id).emit("notifications", noti.length);
     res.send("Succesfully Deleted");
   })
 );
@@ -98,25 +110,25 @@ router.post(
     const { requestType, requestor, acceptor } = req.body;
     const REQ = await Request.findOne({ acceptor, requestor, requestType });
     // console.log(REQ)
-    if (!REQ) {
+    if (!REQ && requestor!==acceptor) {
       const request = new Request({
         requestType,
         requestor,
         acceptor,
       });
       await request.save();
-      const requests = await Request.find({ acceptor, status: "pending" });
-      const io = req.app.get("socketio");
-      io.of("/requests").to(acceptor).emit("notifications", requests.length);
-      const newRequests = await Request.find({ acceptor }).populate(
-        "requestor"
-      );
+      // const requests = await Request.find({ acceptor, status: "pending" });
+      // const io = req.app.get("socketio");
+      // io.of("/requests").to(acceptor).emit("notifications", requests.length);
+      // const newRequests = await Request.find({ acceptor }).populate(
+      //   "requestor"
+      // );
 
-      io.of("/requests")
-        .to(acceptor)
-        .emit("get_all_requests", { requests: newRequests });
+      // io.of("/requests")
+      //   .to(acceptor)
+      //   .emit("get_all_requests", { requests: newRequests });
 
-      res.send(requests);
+      res.send(request.status);
     }
   })
 );
@@ -151,20 +163,32 @@ router.post(
   "/invite",
   [auth],
   asyncHandler(async (req, res) => {
-    const { acceptor, requestor, roomId, roomName } = req.body;
-    const request = new Request({
-      acceptor: acceptor,
+    const {userList,roomId}=req.body
+    console.log(userList)
+    // const { acceptor, requestor, roomId, roomName } = req.body;
+    for(let i=0;i<userList.length;i++){
+      const request = new Request({
+      acceptor: userList[i].userId,
       requestType: "invitation",
-      requestor: requestor,
+      requestor: req.user._id,
       roomId,
-      roomName,
+      roomName:"firstman",
     });
-    await request.save();
-    const requests = await Request.find({ acceptor, status: "pending" });
-    console.log(requests);
+    await request.save()
+    }
+    // const request = new Request({
+    //   acceptor: acceptor,
+    //   requestType: "invitation",
+    //   requestor: requestor,
+    //   roomId,
+    //   roomName,
+    // });
+    // await request.save();
+    // const requests = await Request.find({ acceptor, status: "pending" });
+    // console.log(requests);
 
-    io.of("/requests").to(acceptor).emit("notifications", requests.length);
-    res.send(requests);
+    // io.of("/requests").to(acceptor).emit("notifications", requests.length);
+    res.send("Successfully invited");
   })
 );
 
@@ -186,16 +210,21 @@ router.post(
   [auth],
   asyncHandler(async (req, res) => {
     const acceptor = req.body.acceptor;
+    console.log(req.body.roomId)
     const chat = await Chat.findById(req.body.roomId);
+
     chat?.users.push({ userId: req.user._id });
+    console.log(chat)
     await chat.save();
     const request = await Request.findById(req.params.id);
+    console.log(request)
     request.status = "accepted";
+    
     await request.save();
-    const requests = await Request.find({ acceptor, status: "pending" });
-    const io = req.app.get("socketio");
-    io.of("/requests").to(acceptor).emit("notifications", requests.length);
-    res.send(requests);
+    // const requests = await Request.find({ acceptor, status: "pending" });
+    // const io = req.app.get("socketio");
+    // io.of("/requests").to(acceptor).emit("notifications", requests.length);
+    res.send(request);
   })
 );
 

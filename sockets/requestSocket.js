@@ -1,6 +1,7 @@
 const Request = require("../models/RequestModel");
 const Chat = require("../models/ChatModel");
 const User = require("../models/Users");
+
 const requestSocket = (io) => {
   io.of("/requests").on("connection", async (socket) => {
     console.log("Connection..............");
@@ -23,7 +24,6 @@ const requestSocket = (io) => {
       const user = await User.findById(data.userId);
 
       user.friends.push({ userId: data.requestorId });
-      console.log(user);
       await user.save();
       const requests = await Request.find({ acceptor: data.userId }).populate(
         "requestor"
@@ -67,7 +67,6 @@ const requestSocket = (io) => {
           roomId: invite.roomId,
           requestor: invite.requestor,
         });
-        console.log(REQ)
         if (!REQ) {
           const request = new Request({
             acceptor: invite.acceptor,

@@ -1,14 +1,13 @@
 {
   "name": "school-backend",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "server": "fuser -k 5001/tcp && nodemon server"
   },
-  "author": "yugal and aashish",
+  "author": "yugal",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.1",
@@ -22,11 +21,20 @@
     "joi": "^17.4.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
-    "mongoose": "^5.12.13",
+    "mongoose": "^5.13.8",
     "nodemon": "^2.0.7",
     "passport": "^0.4.1",
     "passport-google-oauth20": "^2.0.0",
     "redis": "^3.1.2",
     "socket.io": "^4.1.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yugal109/school-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yugal109/school-backend/issues"
+  },
+  "homepage": "https://github.com/yugal109/school-backend#readme",
+  "description": ""
 }

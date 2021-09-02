@@ -12,6 +12,7 @@ const messageSchema = new mongoose.Schema({
   },
 },{timestamps:true});
 
+
 const userListSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -19,6 +20,8 @@ const userListSchema = new mongoose.Schema({
     ref: "User",
   }
 });
+
+
 
 const chatSchema = new mongoose.Schema({
   name: {
@@ -38,12 +41,6 @@ const chatSchema = new mongoose.Schema({
     enum:["open","closed"],
     default:"closed"
   },
-  messages: [
-    messageSchema,
-    {
-      timestamps: true,
-    },
-  ],
   expire_at: { type: Date, default: Date.now, expires: 86400 },
 });
 

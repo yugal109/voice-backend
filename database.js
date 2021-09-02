@@ -1,19 +1,20 @@
-const mongoose=require("mongoose")
-require('dotenv').config()
-const URL=process.env.MONGO_URL
+const mongoose = require("mongoose");
+require("dotenv").config();
+const URL = process.env.MONGO_URL;
 
-function connect(){
-    mongoose.connect(URL, {
-        useNewUrlParser: true,
-        useCreateIndex: true,
-        useUnifiedTopology: true
-    });
-    
-    const db = mongoose.connection;
-    db.on("error", console.error.bind(console, "connection error:"));
-    db.once("open", ()=> {
-        console.log("Successfully connected to database.");
-    });
+function connect() {
+    mongoose.connect(URL,{
+        useUnifiedTopology: true,
+        useNewUrlParser: true
+    })
+    .then(()=>{
+        console.log("Conneccted to data........")
+    })
+  .catch(error=>{
+      console.log(error)
+  });
 }
 
-module.exports=connect;
+
+
+module.exports = connect;

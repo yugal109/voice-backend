@@ -7,6 +7,7 @@ const UserRegisterRoutes = require("./routes/UserRegisterRoutes");
 const LoginRoutes = require("./routes/LoginRoute");
 const ReactionRoutes = require("./routes/ReactionRoutes");
 const RequestRoutes=require("./routes/RequestRoute")
+const ChatRoutes=require('./routes/ChatRoute')
 require("dotenv").config();
 const socketio = require("socket.io");
 const Chat = require("./models/ChatModel");
@@ -18,8 +19,7 @@ const messageSocket = require("./sockets/messageSocket");
 const LikeSocket = require("./sockets/LikeSocket");
 const requestSocket=require("./sockets/requestSocket")
 const asyncHandler = require("express-async-handler");
-const client=require("./cache/redis")
-
+// const client=require("./cache/redis")
 connect();
 
 //MIDDLEWARES
@@ -40,12 +40,16 @@ app.use("/react", ReactionRoutes);
 //REQUEST ROUTES
 app.use("/requests",RequestRoutes)
 
+//CHAT routes
+app.use('/chat',ChatRoutes)
+
 //GET SEARCHED USERS
 app.get(
   "/search",
   [auth],
   asyncHandler(async (req, res) => {
     const username=req.query.username
+    console.log(username)
     const users=await User.find({"username" : { $regex:username, $options:"$i" }})
     res.send(users)
   })
@@ -56,13 +60,26 @@ app.get(
   "/friends/:userId",
   [auth],
   asyncHandler(async (req, res) => {
-    const users=await User.findById(req.params.userId).populate({
-      path:"friends",
-      populate:[
-        {path:"userId",model:"User"}
-      ]
-    })
-    res.send(users.friends)
+    // client.get("friends",async(error,friends)=>{
+    //   if(friends!=null){
+    //     res.send(JSON.parse(friends))
+    //     console.log(JSON.parse(friends))
+
+    //   }else{
+
+        const users=await User.findById(req.params.userId).populate({
+          path:"friends",
+          populate:[
+            {path:"userId",model:"User"}
+          ]
+        })
+        // client.setex("friends",3600,JSON.stringify(users.friends))
+        res.send(users.friends)
+
+      // }
+    // }
+    // )
+
   })
 );
 
@@ -73,6 +90,7 @@ app.post(
   "/create",
   [auth],
   asyncHandler(async (req, res) => {
+    // console.log("THe data is",req.body)
     const room = new Chat({
       admin: req.user._id,
       name: req.body.name,
@@ -88,26 +106,46 @@ app.get(
   "/inbox",
   [auth],
   asyncHandler(async (req, res) => {
-    const inboxlist = await Chat.find({ admin: req.user._id });
+    const inboxlist = await Chat.find({$or:[{'users':{$elemMatch:{userId:req.user._id}}},{admin:req.user._id}]});
     res.send(inboxlist);
   })
 );
+
+
+//latest message
+
+app.get(
+  "/latest_room",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const inboxlist = await Chat.find({ admin: req.user._id });
+    // console.log(inboxlist)
+    res.send(inboxlist);
+  })
+);
+
 
 //USERS IN ROOM
 app.get(
   "/users_in_room/:roomid",
   [auth],
   asyncHandler(async (req, res) => {
-    const usersList = await Chat.findById(req.params.roomid).populate({
-      path:"users",model:"User",
-      populate:[
-        {
-          path:"userId",model:"User"
-        }
-      ]
-    });
-    const admin=await Chat.findById(req.params.roomid).select({admin:1}).populate("admin")
-    res.send({usersList:usersList,admin:admin});
+    const usersList = await Chat.findById(req.params.roomid).populate({ 
+      path: 'users admin',
+      populate: {
+        path: 'userId',
+        model: 'User'
+      } 
+   })
+    // const present=usersList.users.some(e=>e.userId._id == req.user._id)
+    // if(present || (usersList.admin==req.user._id)){
+
+    //   res.send(true)
+    // }else{
+    //   res.send(false)
+    // }
+
+    res.send(usersList)
   })
 );
 
@@ -146,17 +184,14 @@ app.post(
   asyncHandler(async (req, res) => {
     const {friend}=req.body
     const user=await User.findById(friend)
-    console.log(user)
     const frnd=user.friends?.filter(e=>e.userId!=req.user._id)
     user.friends=frnd;
     await user.save();
-    const request=await Request.findOneAndDelete({requestor:req.user._id,acceptor:friend,requestType:"friend_request"})
-    console.log(request)
-    res.send("removed")
+    await Request.findOneAndDelete({requestor:req.user._id,acceptor:friend,requestType:"friend_request"})
+    res.send("follow")
     
   })
 );
-
 
 
 //REACTIONS IN MESSAGE
@@ -173,6 +208,13 @@ app.get(
 );
 
 
+app.get("/requestlength",[auth],async(req,res)=>{
+  const requests=await Request.find({acceptor:req.user._id,status:"pending"})
+  // console.log(requests)
+  res.send({length:requests.length})
+})
+
+
 
 
 const PORT = process.env.PORT || 5002;
@@ -187,6 +229,7 @@ const io = socketio(server, {
     origin: "*",
   },
 });
+
 app.set("socketio",io)
 
 messageSocket(io);

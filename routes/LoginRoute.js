@@ -15,7 +15,8 @@ router.post("/", asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email })
-    if (!email) return res.status(404).send("Wrong email or password.")
+    
+    if (user==null) return res.status(404).send("Wrong email or password.")
 
     const validUser = await bcrypt.compare(password, user.password)
     if (!validUser) return res.status(404).send("Wrong email or password.")
@@ -33,8 +34,9 @@ router.post("/", asyncHandler(async (req, res) => {
 }))
 
 router.post("/googlelogin", asyncHandler(async (req, res) => {
-
+    
     const tokenId = req.body.tokenId;
+    
     client.verifyIdToken({ idToken: tokenId, audience: process.env.CLIENT_ID })
         .then(async (response) => {
             const { email_verified, name, given_name,picture:image, family_name, email, picture } = response.payload;

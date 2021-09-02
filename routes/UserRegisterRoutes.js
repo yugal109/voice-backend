@@ -7,14 +7,15 @@ const Request = require("../models/RequestModel");
 const asyncHandler = require("express-async-handler");
 const router = express.Router();
 const auth = require("../middleware/auth");
-const client = require("../cache/redis");
+// const client = require("../cache/redis");
+// const { RedisClient } = require("redis");
 
 // ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
 router.get(
   "/",
-  [auth],
+  // [auth],
   asyncHandler(async (req, res) => {
-    const users = await User.find().sort({ name: 1 });
+    const users = await User.find({}).sort({ name: 1 });
     res.send(users);
   })
 );
@@ -23,15 +24,19 @@ router.get(
   "/:id",
   [auth],
   asyncHandler(async (req, res) => {
+    
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).send("User not found.");
+ 
+    
     res.send({
-      id: user.id,
+      _id: user.id,
       username: user.username,
       email: user.email,
       fullname: user.fullname,
       accountType: user.accountType,
       image: user.image,
+     
     });
   })
 );
@@ -75,19 +80,19 @@ router.get(
   "/accountType/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    client.get("accountType", async (error, aType) => {
-      if (aType != null) {
-        res.send({ accountType: JSON.parse(aType) });
-      } else {
+    // client.get("accountType", async (error, aType) => {
+    //   if (aType != null) {
+    //     res.send({ accountType: JSON.parse(aType) });
+    //   } else {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).send("User not found");
-        client.setex("accountType", 3600, JSON.stringify(user.accountType));
+        // client.setex("accountType", 3600, JSON.stringify(user.accountType));
         res.send({ accountType: user.accountType });
-      }
-    });
+      // }
+    // });
   })
 );
-
+// console.log("Startted")
 //unfriend
 router.post(
   "/unfriend/:id",
@@ -106,18 +111,23 @@ router.get(
     const user = await User.findById(req.params.id);
     const isFriend = user.friends.find((e) => e.userId == req.user._id);
 
+    
+
     const requests = await Request.findOne({
       requestor: req.user._id,
       acceptor: req.params.id,
       requestType: "friend_request",
       status: "pending",
     });
+
+
     if (isFriend) {
-      res.send("friends");
-    } else if (requests) {
-      res.send("pending");
+      return res.send("unfollow");
+     }
+      else if (requests) {
+      return res.send("pending");
     } else {
-      res.send("not-friends");
+      return res.send("follow");
     }
   })
 );
@@ -137,6 +147,7 @@ router.put(
         user.accountType = "public";
       }
       await user.save();
+      // client.setex("accountType",3600,JSON.stringify(user.accountType))
       res.send("Updated");
     } else {
       res.status(403).send("Not Authorized.");
@@ -172,22 +183,22 @@ router.put(
   })
 );
 
+
 router.put(
   "/all/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    const { username, url } = req.body;
+    const { username,fullname,accountType } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).send("User not found");
-    console.log("The Url is : ", url);
-    if ((req.user._id = user._id)) {
+    // console.log("The Url is : ", url);
+    if ((req.user._id == user._id)) {
       user.username = username;
-      if (url) {
-        user.image = url;
-        console.log("The url is", url);
-      }
+      user.fullname=fullname
+      user.accountType=accountType
       await user.save();
-      res.send("Updated");
+      res.send(user)
+
     } else {
       res.status(403).send("Not Authorized.");
     }
