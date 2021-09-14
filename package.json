@@ -1,5 +1,5 @@
 {
-  "name": "school-backend",
+  "name": "voice-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -36,5 +36,6 @@
     "url": "https://github.com/yugal109/school-backend/issues"
   },
   "homepage": "https://github.com/yugal109/school-backend#readme",
+  "devDependencies": {},
   "description": ""
 }
