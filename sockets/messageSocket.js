@@ -45,7 +45,9 @@ function messageSocket(io) {
       const messages=await Message.find({chatRoom:room}).populate('user')
 
 
-      io.to(room).emit("allMessage",{messages})
+//       io.to(room).emit("allMessage",{messages})
+      io.to(room).emit("sentMessage",{msg})
+      
       
     })
 
