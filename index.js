@@ -155,7 +155,7 @@ app.get(
   [auth],
   asyncHandler(async (req, res) => {
     const chat = await Chat.findById(req.params.roomid)
-    const user=chat?.users.find(e=>e.userId==req.user._id)
+    const user=chat.users.find(e=>e.userId==req.user._id)
     if(chat.admin==req.user._id || user){
       res.send(true);
     }else{
@@ -170,7 +170,7 @@ app.get(
   [auth],
   asyncHandler(async (req, res) => {
     const chat = await Chat.findById(req.params.roomid)
-    const users=chat?.users.filter(e=>e.userId==req.user._id)
+    const users=chat.users.filter(e=>e.userId==req.user._id)
     chat.users=users;
     await chat.save();
     res.send("Removed")
@@ -184,7 +184,7 @@ app.post(
   asyncHandler(async (req, res) => {
     const {friend}=req.body
     const user=await User.findById(friend)
-    const frnd=user.friends?.filter(e=>e.userId!=req.user._id)
+    const frnd=user.friends.filter(e=>e.userId!=req.user._id)
     user.friends=frnd;
     await user.save();
     await Request.findOneAndDelete({requestor:req.user._id,acceptor:friend,requestType:"friend_request"})

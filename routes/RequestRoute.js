@@ -213,7 +213,7 @@ router.post(
     console.log(req.body.roomId)
     const chat = await Chat.findById(req.body.roomId);
 
-    chat?.users.push({ userId: req.user._id });
+    chat.users.push({ userId: req.user._id });
     console.log(chat)
     await chat.save();
     const request = await Request.findById(req.params.id);

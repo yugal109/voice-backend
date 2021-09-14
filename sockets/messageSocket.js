@@ -6,48 +6,47 @@ const res = require("express/lib/response");
 
 function messageSocket(io) {
   io.on("connection", async (socket) => {
-    console.log("connected")
-    socket.emit("conn",{data:`Connected ${socket.id}`})
+    // console.log("connected")
+    // socket.emit("conn",{data:`Connected ${socket.id}`})
 
     socket.on("join", async ({ id, room }, callback) => {
-
+          console.log("JOINEDDDDDDDD")
           const user = await User.findById(id);
           if (!user) return callback({ error: "User doesnot exist" });
 
-          const chatRoom=await Chat.findById(room)
+          // const chatRoom=await Chat.findById(room)
               
-          const present =chatRoom.users.some(e=>e.userId._id==id)|| chatRoom.admin==id
+          // const present =chatRoom.users.some(e=>e.userId._id==id)|| chatRoom.admin==id
 
-          if(present){
+          // if(present){
 
-            const messages=await Message.find({chatRoom:room}).populate('user')
-          socket.emit("allMessage",{messages})
+          // //   const messages=await Message.find({chatRoom:room}).populate('user')
+          // // socket.emit("allMessage",{messages})
+          // // socket.join(room);
+
+          // }
+
           socket.join(room);
-
-          }
+          console.log("JOINEDDDDDDD",socket.id)
 
     });
 
-
     socket.on("messageSend",async({message,userId,room},callback)=>{
-
-      // const user = await User.findById(userId);
-
-
-      let msg=new Message({
+      let mssg=new Message({
         chatRoom:room,
         message,
         user:userId
       })
 
-      await msg.save()
+      await mssg.save()
+      // console.log(mssg)
 
-      const messages=await Message.find({chatRoom:room}).populate('user')
+      const messages=await Message.find({_id:mssg._id}).populate('user')
+      console.log(messages)
 
 
-//       io.to(room).emit("allMessage",{messages})
-      io.to(room).emit("sentMessage",{msg})
-      
+      io.to(room).emit("sentMessage",{msg:messages[0]})
+      // socket.emit("sentMessage",{msg:messages[0]})
       
     })
 

@@ -93,7 +93,7 @@ const requestSocket = (io) => {
 
     socket.on("accept_request", async ({ userId, roomId, requestId }) => {
       const chat = await Chat.findById(roomId);
-      chat?.users.push({ userId });
+      chat.users.push({ userId });
       await chat.save();
       const request = await Request.findById(requestId);
       request.status = "accepted";
