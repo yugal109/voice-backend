@@ -6,8 +6,7 @@ const res = require("express/lib/response");
 
 function messageSocket(io) {
   io.on("connection", async (socket) => {
-    // console.log("connected")
-    // socket.emit("conn",{data:`Connected ${socket.id}`})
+
 
     socket.on("join", async ({ id, room }, callback) => {
           console.log("JOINEDDDDDDDD")
@@ -41,11 +40,11 @@ function messageSocket(io) {
       await mssg.save()
       // console.log(mssg)
 
-      const messages=await Message.find({_id:mssg._id}).populate('user')
-      console.log(messages)
+      const messages=await Message.findOne({_id:mssg._id}).populate('user')
+      // console.log(messages)
 
 
-      io.to(room).emit("sentMessage",{msg:messages[0]})
+      io.to(room).emit("sentMessage",{msg:messages})
       // socket.emit("sentMessage",{msg:messages[0]})
       
     })

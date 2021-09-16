@@ -72,6 +72,32 @@ router.post(
   })
 );
 
+router.post(
+  "/deleterequest_by_requestor",
+  [auth],
+  asyncHandler(async (req, res) => {
+    const {acceptor}=req.body
+    const requests = await Request.findOneAndDelete({
+      requestor:req.user._id,
+      acceptor,
+      requestType:"friend_request",
+      status:"pending"
+    });
+    // console.log(requests)
+    // console.log(req.user);
+    // const noti = await Request.find({
+    //   acceptor: req.user._id,
+    //   requestType: "friend_request",
+    //   status: "pending",
+    // });
+    // const io = req.app.get("socketio");
+    // io.of("/requests").to(req.user._id).emit("notifications", noti.length);
+    res.send("follow");
+  })
+);
+
+
+
 router.delete(
   "/deleterequest/:id",
   [auth],
