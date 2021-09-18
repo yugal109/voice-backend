@@ -11,9 +11,10 @@ router.get("/",[auth],asyncHandler(async(req,res)=>{
 
    const requests=await Request.find({
      acceptor:req.user._id,
-     status:"pending"
+    //  status:"pending"
    }).populate('requestor')
-  //  console.log(requests)
+
+   console.log(requests)
 
 
    res.send(requests)
@@ -238,7 +239,6 @@ router.post(
     const acceptor = req.body.acceptor;
     console.log(req.body.roomId)
     const chat = await Chat.findById(req.body.roomId);
-
     chat.users.push({ userId: req.user._id });
     console.log(chat)
     await chat.save();
