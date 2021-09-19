@@ -191,7 +191,7 @@ router.post(
   [auth],
   asyncHandler(async (req, res) => {
     const {userList,roomId}=req.body
-    console.log(userList)
+    // console.log(userList)
     // const { acceptor, requestor, roomId, roomName } = req.body;
     for(let i=0;i<userList.length;i++){
       const request = new Request({
@@ -237,13 +237,14 @@ router.post(
   [auth],
   asyncHandler(async (req, res) => {
     const acceptor = req.body.acceptor;
-    console.log(req.body.roomId)
+    // console.log(req.body.roomId)
     const chat = await Chat.findById(req.body.roomId);
+    // console.log(chat)
     chat.users.push({ userId: req.user._id });
     console.log(chat)
     await chat.save();
     const request = await Request.findById(req.params.id);
-    console.log(request)
+    // console.log(request)
     request.status = "accepted";
     
     await request.save();

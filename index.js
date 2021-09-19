@@ -125,7 +125,7 @@ app.get(
         { users: { $elemMatch: { userId: req.user._id } } },
       ],
     });
-    console.log(inboxlist);
+    // console.log(inboxlist);
     res.send(inboxlist);
   })
 );
@@ -170,13 +170,20 @@ app.get(
 );
 
 //removing users from chat room
-app.get(
+app.post(
   "/remove_user/:roomid",
   [auth],
   asyncHandler(async (req, res) => {
     const chat = await Chat.findById(req.params.roomid);
+    const {acceptor}=req.body
     const users = chat.users.filter((e) => e.userId == req.user._id);
     chat.users = users;
+    await Request.findOneAndDelete({
+      status:"accepted",
+      requestType:"invitation",
+      requestor:req.user._id,
+      acceptor
+    })
     await chat.save();
     res.send("Removed");
   })
