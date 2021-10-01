@@ -175,15 +175,15 @@ app.post(
   [auth],
   asyncHandler(async (req, res) => {
     const chat = await Chat.findById(req.params.roomid);
-    const {acceptor}=req.body
+    const { acceptor } = req.body;
     const users = chat.users.filter((e) => e.userId == req.user._id);
     chat.users = users;
     await Request.findOneAndDelete({
-      status:"accepted",
-      requestType:"invitation",
-      requestor:req.user._id,
-      acceptor
-    })
+      status: "accepted",
+      requestType: "invitation",
+      requestor: req.user._id,
+      acceptor,
+    });
     await chat.save();
     res.send("Removed");
   })

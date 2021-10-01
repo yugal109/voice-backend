@@ -26,7 +26,7 @@ function messageSocket(io) {
           // }
 
           socket.join(room);
-          console.log("JOINEDDDDDDD",socket.id)
+          // console.log("JOINEDDDDDDD",socket.id)
 
     });
 

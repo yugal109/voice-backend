@@ -10,11 +10,6 @@ const reactSchema=new mongoose.Schema({
         required:true,
         ref:'User'
 
-    },
-    reacts:{
-        type:String,
-        enum:["like","haha","love","angry","sad"],
-        required:true
     }
 })
 
