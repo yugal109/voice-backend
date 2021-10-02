@@ -8,16 +8,18 @@ const React = require("../models/ReactionModel");
 router.get(
   "/:msgid",
   asyncHandler(async (req, res) => {
-    const react = await React.find({ messageId: req.params.msgid });
-    res.send(react);
+    const react = await Message.findById(req.params.msgid).populate(
+      "reactions.userId"
+    );
+    res.send(react.reactions);
   })
 );
 
 router.post("/:id", [auth], async (req, res) => {
   const messageId = req.params.id;
-  const message = await Message.findOne({ "reactions.userId": req.user._id });
+  const message = await Message.findOne({_id: messageId, "reactions.userId": req.user._id });
   if (message) {
-   await Message.updateOne(
+    await Message.updateOne(
       {},
       { $pull: { reactions: { userId: req.user._id } } }
     );
