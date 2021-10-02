@@ -20,7 +20,7 @@ router.post("/:id", [auth], async (req, res) => {
   const message = await Message.findOne({_id: messageId, "reactions.userId": req.user._id });
   if (message) {
     await Message.updateOne(
-      {},
+      {_id:messageId},
       { $pull: { reactions: { userId: req.user._id } } }
     );
     res.send({ status: 0 });
