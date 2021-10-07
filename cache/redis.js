@@ -1,9 +1,19 @@
-// const Redis = require("redis");
+const Redis = require("redis");
+require("dotenv").config();
 
-// const client = Redis.createClient({
-//   host: "127.0.0.1",
-//   port: 6379,
-//   // password: 'pythonjs'
-// });
+try {
+    console.log(process.env.REDIS_TLS_URL)
+  const client = Redis.createClient(process.env.REDIS_TLS_URL,{
+      tls:{
+        rejectUnauthorized: false
+      }
+  });
 
-// module.exports=client
+  client.on_connect("error", (error) => {
+    console.log(error);
+  });
+
+  module.exports = client;
+} catch (error) {
+  console.log(error);
+}

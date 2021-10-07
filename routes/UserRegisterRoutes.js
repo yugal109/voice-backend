@@ -7,7 +7,13 @@ const Request = require("../models/RequestModel");
 const asyncHandler = require("express-async-handler");
 const router = express.Router();
 const auth = require("../middleware/auth");
-// const client = require("../cache/redis");
+const {promisify}=require("util")
+
+const client = require("../cache/redis");
+// promisify(client.get).bind(client)
+// promisify(client.set).bind(client)
+
+
 // const { RedisClient } = require("redis");
 
 // ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
@@ -24,20 +30,46 @@ router.get(
   "/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send("User not found.");
- 
-    
-    res.send({
-      _id: user.id,
-      username: user.username,
-      email: user.email,
-      fullname: user.fullname,
-      accountType: user.accountType,
-      image: user.image,
-     
-    });
+    // client.set("name",JSON.stringify("Yugal"))
+    client.get(`USER-${req.params.id}`,async (error,USER)=>{
+      if(error){
+        console.log(error)
+      }else{
+        if(USER==null){
+          console.log("FIRST TIME ")
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).send("User not found.");
+
+        client.setex(`USER-${user._id}`,100,JSON.stringify({
+          _id: user.id,
+          username: user.username,
+          email: user.email,
+          fullname: user.fullname,
+          accountType: user.accountType,
+          image: user.image,
+
+        }))
+
+        res.send({
+          _id: user.id,
+          username: user.username,
+          email: user.email,
+          fullname: user.fullname,
+          accountType: user.accountType,
+          image: user.image,
+         
+        });
+          
+        }else{
+          res.send(JSON.parse(USER))
+          
+        }
+        
+       
+      }
+    })
+
+   
   })
 );
 
