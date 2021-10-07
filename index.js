@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-const jwt = require("jsonwebtoken");
+const webpush = require("web-push");
 const connect = require("./database");
 const UserRegisterRoutes = require("./routes/UserRegisterRoutes");
 const LoginRoutes = require("./routes/LoginRoute");
@@ -49,7 +49,6 @@ app.get(
   [auth],
   asyncHandler(async (req, res) => {
     const username = req.query.username;
-    console.log(username);
     const users = await User.find({
       username: { $regex: username, $options: "$i" },
     });
@@ -232,6 +231,23 @@ app.get("/requestlength", [auth], async (req, res) => {
   res.send({ length: requests.length });
 });
 
+// webpush.setVapidDetails(
+//   "mailto:yugalkhati570@gmail.com",
+//   process.env.PUBLIC_VAPID_KEY,
+//   process.env.PRIVATE_VAPID_KEY
+// );
+
+//subscrive route
+app.post("/subscribe", (req, res) => {
+  const subscription = req.body;
+  res.status(201).send({});
+  const payload=JSON.stringify({title:"Pushed"})
+  webpush.sendNotification(subscription,payload)
+  .catch((error)=>{
+    console.log(error)
+  })
+});
+
 const PORT = process.env.PORT || 5002;
 
 const server = app.listen(PORT, () => {
@@ -247,5 +263,5 @@ const io = socketio(server, {
 app.set("socketio", io);
 
 messageSocket(io);
-LikeSocket(io);
+// LikeSocket(io);
 requestSocket(io);

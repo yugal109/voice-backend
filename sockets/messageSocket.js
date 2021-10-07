@@ -5,56 +5,38 @@ const Message = require("../models/MessageModal");
 const res = require("express/lib/response");
 
 function messageSocket(io) {
-  io.on("connection", async (socket) => {
-
+  io.on("connection",(socket) => {
 
     socket.on("join", async ({ id, room }, callback) => {
-          console.log("JOINEDDDDDDDD")
-          const user = await User.findById(id);
-          if (!user) return callback({ error: "User doesnot exist" });
-
-          // const chatRoom=await Chat.findById(room)
-              
-          // const present =chatRoom.users.some(e=>e.userId._id==id)|| chatRoom.admin==id
-
-          // if(present){
-
-          // //   const messages=await Message.find({chatRoom:room}).populate('user')
-          // // socket.emit("allMessage",{messages})
-          // // socket.join(room);
-
-          // }
-
-          socket.join(room);
-          // console.log("JOINEDDDDDDD",socket.id)
-
+      console.log("JOINEDDDDDDDD",room);
+      // const user = await User.findById(id);
+      // if (!user) return callback({ error: "User doesnot exist" });
+      socket.join(room);
     });
 
-    socket.on("messageSend",async({message,userId,room},callback)=>{
-      let mssg=new Message({
-        chatRoom:room,
+    socket.on("messageSend", async ({ message, userId, room }, callback) => {
+      let mssg = new Message({
+        chatRoom: room,
         message,
-        user:userId
-      })
+        user: userId,
+      });
 
-      await mssg.save()
-      // console.log(mssg)
+      await mssg.save();
+      console.log(mssg)
 
-      const messages=await Message.findOne({_id:mssg._id}).populate('user')
-      // console.log(messages)
-
-
-      io.to(room).emit("sentMessage",{msg:messages})
-      // socket.emit("sentMessage",{msg:messages[0]})
+      const messages = await Message.findOne({ _id: mssg._id }).populate(
+        "user"
+      );
       
-    })
+      io.to(room).emit("messageFromServer", { msg: messages });
 
-    socket.on("typing",({user})=>{
+      // socket.emit("sentMessage",{msg:messages[0]})
+    });
+
+    socket.on("typing", ({ user }) => {
       // console.log(user)
-      socket.broadcast.emit("userTyping",{message:user})
-    })
-
-
+      socket.broadcast.emit("userTyping", { message: user });
+    });
 
     // socket.on("sendMessage", async (information, callback) => {
     //   const user = await User.findById(information.id);

@@ -15,6 +15,9 @@ router.get(
   })
 );
 
+
+
+
 router.post("/:id", [auth], async (req, res) => {
   const messageId = req.params.id;
   const message = await Message.findOne({_id: messageId, "reactions.userId": req.user._id });
@@ -31,5 +34,7 @@ router.post("/:id", [auth], async (req, res) => {
     res.send({ status: 1 });
   }
 });
+
+
 
 module.exports = router;
