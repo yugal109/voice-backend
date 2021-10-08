@@ -38,6 +38,8 @@ function messageSocket(io) {
       socket.broadcast.emit("userTyping", { message: user });
     });
 
+    
+
     // socket.on("sendMessage", async (information, callback) => {
     //   const user = await User.findById(information.id);
     //   const rm = await Chat.findById(information.room);

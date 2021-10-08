@@ -17,6 +17,7 @@ const Request = require("./models/RequestModel");
 const auth = require("./middleware/auth");
 const messageSocket = require("./sockets/messageSocket");
 const LikeSocket = require("./sockets/LikeSocket");
+const inboxSocket=require("./sockets/inboxSocket")
 const requestSocket = require("./sockets/requestSocket");
 const asyncHandler = require("express-async-handler");
 // const client=require("./cache/redis")
@@ -43,6 +44,21 @@ app.use("/requests", RequestRoutes);
 //CHAT routes
 app.use("/chat", ChatRoutes);
 
+//PORT
+const PORT = process.env.PORT || 5002;
+
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on the port ${PORT}`);
+});
+
+
+//SOCKET
+const io = socketio(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
 //GET SEARCHED USERS
 app.get(
   "/search",
@@ -55,6 +71,7 @@ app.get(
     res.send(users);
   })
 );
+
 
 //GET FRIENDS
 app.get(
@@ -141,13 +158,6 @@ app.get(
         model: "User",
       },
     });
-    // const present=usersList.users.some(e=>e.userId._id == req.user._id)
-    // if(present || (usersList.admin==req.user._id)){
-
-    //   res.send(true)
-    // }else{
-    //   res.send(false)
-    // }
 
     res.send(usersList);
   })
@@ -174,16 +184,24 @@ app.post(
   [auth],
   asyncHandler(async (req, res) => {
     const chat = await Chat.findById(req.params.roomid);
+
     const { acceptor } = req.body;
     const users = chat.users.filter((e) => e.userId == req.user._id);
     chat.users = users;
+
     await Request.findOneAndDelete({
       status: "accepted",
       requestType: "invitation",
       requestor: req.user._id,
       acceptor,
     });
-    await chat.save();
+    // await chat.save();
+
+    // const io=req.app.get("socketio")
+    console.log(acceptor)
+    console.log(io)
+    io.to(req.params.roomid).emit("userRemoved",{"removed_user":acceptor})
+
     res.send("Removed");
   })
 );
@@ -231,37 +249,13 @@ app.get("/requestlength", [auth], async (req, res) => {
   res.send({ length: requests.length });
 });
 
-// webpush.setVapidDetails(
-//   "mailto:yugalkhati570@gmail.com",
-//   process.env.PUBLIC_VAPID_KEY,
-//   process.env.PRIVATE_VAPID_KEY
-// );
 
-//subscrive route
-app.post("/subscribe", (req, res) => {
-  const subscription = req.body;
-  res.status(201).send({});
-  const payload=JSON.stringify({title:"Pushed"})
-  webpush.sendNotification(subscription,payload)
-  .catch((error)=>{
-    console.log(error)
-  })
-});
 
-const PORT = process.env.PORT || 5002;
 
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on the port ${PORT}`);
-});
-
-const io = socketio(server, {
-  cors: {
-    origin: "*",
-  },
-});
 
 app.set("socketio", io);
 
 messageSocket(io);
 // LikeSocket(io);
+inboxSocket(io)
 requestSocket(io);

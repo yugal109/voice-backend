@@ -7,16 +7,8 @@ const Request = require("../models/RequestModel");
 const asyncHandler = require("express-async-handler");
 const router = express.Router();
 const auth = require("../middleware/auth");
-const {promisify}=require("util")
-
 const client = require("../cache/redis");
-// promisify(client.get).bind(client)
-// promisify(client.set).bind(client)
 
-
-// const { RedisClient } = require("redis");
-
-// ONLY TEACHERS CAN ACCESS THIS --->> LIST OF ALL THE STUDENTENTS
 router.get(
   "/",
   // [auth],
@@ -31,45 +23,42 @@ router.get(
   [auth],
   asyncHandler(async (req, res) => {
     // client.set("name",JSON.stringify("Yugal"))
-    client.get(`USER-${req.params.id}`,async (error,USER)=>{
-      if(error){
-        console.log(error)
-      }else{
-        if(USER==null){
-          console.log("FIRST TIME ")
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).send("User not found.");
+    client.get(`USER-${req.params.id}`, async (error, USER) => {
+      if (error) {
+        console.log(error);
+      } else {
+        if (USER == null) {
+          console.log("FIRST TIME ");
+          const user = await User.findById(req.params.id);
+          if (!user) return res.status(404).send("User not found.");
 
-        client.setex(`USER-${user._id}`,100,JSON.stringify({
-          _id: user.id,
-          username: user.username,
-          email: user.email,
-          fullname: user.fullname,
-          accountType: user.accountType,
-          image: user.image,
+          client.setex(
+            `USER-${user._id}`,
+            100,
+            JSON.stringify({
+              _id: user.id,
+              username: user.username,
+              email: user.email,
+              fullname: user.fullname,
+              accountType: user.accountType,
+              image: user.image,
+            })
+          );
 
-        }))
-
-        res.send({
-          _id: user.id,
-          username: user.username,
-          email: user.email,
-          fullname: user.fullname,
-          accountType: user.accountType,
-          image: user.image,
-         
-        });
-          
-        }else{
-          res.send(JSON.parse(USER))
-          
+          res.send({
+            _id: user.id,
+            username: user.username,
+            email: user.email,
+            fullname: user.fullname,
+            accountType: user.accountType,
+            image: user.image,
+            from: "MONGO",
+          });
+        } else {
+          res.send(JSON.parse(USER));
         }
-        
-       
       }
-    })
-
-   
+    });
   })
 );
 
@@ -116,11 +105,11 @@ router.get(
     //   if (aType != null) {
     //     res.send({ accountType: JSON.parse(aType) });
     //   } else {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).send("User not found");
-        // client.setex("accountType", 3600, JSON.stringify(user.accountType));
-        res.send({ accountType: user.accountType });
-      // }
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).send("User not found");
+    // client.setex("accountType", 3600, JSON.stringify(user.accountType));
+    res.send({ accountType: user.accountType });
+    // }
     // });
   })
 );
@@ -143,8 +132,6 @@ router.get(
     const user = await User.findById(req.params.id);
     const isFriend = user.friends.find((e) => e.userId == req.user._id);
 
-    
-
     const requests = await Request.findOne({
       requestor: req.user._id,
       acceptor: req.params.id,
@@ -152,11 +139,9 @@ router.get(
       status: "pending",
     });
 
-
     if (isFriend) {
       return res.send("unfollow");
-     }
-      else if (requests) {
+    } else if (requests) {
       return res.send("pending");
     } else {
       return res.send("follow");
@@ -191,12 +176,10 @@ router.get(
   "/imageurl/:id",
   [auth],
   asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).send("User not found");
 
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).send("User not found");
-
-        res.send(user.image);
-
+    res.send(user.image);
   })
 );
 
@@ -215,22 +198,20 @@ router.put(
   })
 );
 
-
 router.put(
   "/all/:id",
   [auth],
   asyncHandler(async (req, res) => {
-    const { username,fullname,accountType } = req.body;
+    const { username, fullname, accountType } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).send("User not found");
     // console.log("The Url is : ", url);
-    if ((req.user._id == user._id)) {
+    if (req.user._id == user._id) {
       user.username = username;
-      user.fullname=fullname
-      user.accountType=accountType
+      user.fullname = fullname;
+      user.accountType = accountType;
       await user.save();
-      res.send(user)
-
+      res.send(user);
     } else {
       res.status(403).send("Not Authorized.");
     }
