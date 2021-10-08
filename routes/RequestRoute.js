@@ -171,6 +171,7 @@ router.post(
       
     // console.log(userList)
     // const { acceptor, requestor, roomId, roomName } = req.body;
+    const room=await Chat.findById(roomId)
     const io=req.app.get("socketio")
 
     for (let i = 0; i < userList.length; i++) {
@@ -184,7 +185,7 @@ router.post(
         requestType: "invitation",
         requestor: req.user._id,
         roomId,
-        roomName: "firstman",
+        roomName: room.name
       });
       await request.save();
       console.log((acceptor._id).toString())
