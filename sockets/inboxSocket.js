@@ -12,7 +12,8 @@ const inboxSocket=(io)=>{
                   { users: { $elemMatch: { userId: data.userId} } },
                   { admin: data.userId },
                 ],
-              });
+              }).sort({"lastMessage.created_at":-1});
+              // console.log(inboxlist)
               socket.emit("inboxList",inboxlist)
 
         })

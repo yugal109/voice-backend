@@ -7,7 +7,7 @@ const res = require("express/lib/response");
 function messageSocket(io) {
   io.on("connection",(socket) => {
 
-    socket.on("join", async ({ id, room }, callback) => {
+    socket.on("join", async ({ id, room }) => {
       console.log("JOINEDDDDDDDD",room);
       // const user = await User.findById(id);
       // if (!user) return callback({ error: "User doesnot exist" });
@@ -22,13 +22,29 @@ function messageSocket(io) {
       });
 
       await mssg.save();
-      console.log(mssg)
+
+      const chat=await Chat.findById(room)
+      chat.lastMessage={
+        user:userId,
+        message:message,
+        created_at:new Date()
+      }
+      await chat.save();
 
       const messages = await Message.findOne({ _id: mssg._id }).populate(
         "user"
       );
       
       io.to(room).emit("messageFromServer", { msg: messages });
+
+      // const inboxlist = await Chat.find({
+      //   $or: [
+      //     { users: { $elemMatch: { userId: userId} } },
+      //     { admin: userId },
+      //   ],
+      // }).sort({"lastMessage.created_at":-1});
+      // // console.log(inboxlist)
+      // io.of("/inbox").to(userId).emit("inboxList",inboxlist)
 
       // socket.emit("sentMessage",{msg:messages[0]})
     });
@@ -63,6 +79,7 @@ function messageSocket(io) {
 
     socket.on("disconnect", () => {
       console.log("User was lost.");
+      socket.disconnect();
     });
   });
 }
