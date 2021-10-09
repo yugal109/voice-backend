@@ -37,14 +37,14 @@ function messageSocket(io) {
       
       io.to(room).emit("messageFromServer", { msg: messages });
 
-      // const inboxlist = await Chat.find({
-      //   $or: [
-      //     { users: { $elemMatch: { userId: userId} } },
-      //     { admin: userId },
-      //   ],
-      // }).sort({"lastMessage.created_at":-1});
-      // // console.log(inboxlist)
-      // io.of("/inbox").to(userId).emit("inboxList",inboxlist)
+      const inboxlist = await Chat.find({
+        $or: [
+          { users: { $elemMatch: { userId: userId} } },
+          { admin: userId },
+        ],
+      }).sort({"lastMessage.created_at":-1});
+      // console.log(inboxlist)
+      io.of("/inbox").to(userId).emit("inboxList",inboxlist)
 
       // socket.emit("sentMessage",{msg:messages[0]})
     });
