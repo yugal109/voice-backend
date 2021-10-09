@@ -36,6 +36,7 @@ function messageSocket(io) {
       );
       
       io.to(room).emit("messageFromServer", { msg: messages });
+      
 
       const inboxlist = await Chat.find({
         $or: [
@@ -43,8 +44,14 @@ function messageSocket(io) {
           { admin: userId },
         ],
       }).sort({"lastMessage.created_at":-1});
-      // console.log(inboxlist)
-      io.of("/inbox").to(userId).emit("inboxList",inboxlist)
+      io.of("/inbox").to((chat.admin).toString()).emit("inboxList",inboxlist)
+   
+
+      for(let i=0;i<chat.users.length;i++){
+
+          io.of("/inbox").to((chat.users[i].userId).toString()).emit("inboxList",inboxlist)
+        
+      }
 
       // socket.emit("sentMessage",{msg:messages[0]})
     });
