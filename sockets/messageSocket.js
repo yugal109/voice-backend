@@ -5,10 +5,9 @@ const Message = require("../models/MessageModal");
 const res = require("express/lib/response");
 
 function messageSocket(io) {
-  io.on("connection",(socket) => {
-
+  io.on("connection", (socket) => {
     socket.on("join", async ({ id, room }) => {
-      console.log("JOINEDDDDDDDD",room);
+      console.log("JOINEDDDDDDDD", room);
       // const user = await User.findById(id);
       // if (!user) return callback({ error: "User doesnot exist" });
       socket.join(room);
@@ -23,34 +22,73 @@ function messageSocket(io) {
 
       await mssg.save();
 
-      const chat=await Chat.findById(room)
-      chat.lastMessage={
-        user:userId,
-        message:message,
-        created_at:new Date()
-      }
+      const chat = await Chat.findById(room);
+      chat.lastMessage = {
+        user: userId,
+        message: message,
+        created_at: new Date(),
+      };
       await chat.save();
 
       const messages = await Message.findOne({ _id: mssg._id }).populate(
         "user"
       );
-      
+
       io.to(room).emit("messageFromServer", { msg: messages });
-      
+      // console.log(chat.admin);
+      // console.log(userId);
 
-      const inboxlist = await Chat.find({
-        $or: [
-          { users: { $elemMatch: { userId: userId} } },
-          { admin: userId },
-        ],
-      }).sort({"lastMessage.created_at":-1});
-      io.of("/inbox").to((chat.admin).toString()).emit("inboxList",inboxlist)
-   
+      // console.log(chat.admin == userId);
 
-      for(let i=0;i<chat.users.length;i++){
+      if (chat.admin == userId) {
+        const inboxlist = await Chat.find({
+          $or: [
+            { users: { $elemMatch: { userId: userId } } },
+            { admin: userId },
+          ],
+        }).sort({ "lastMessage.created_at": -1 })
+        const socket=io.of("/inbox")
+        socket.to(chat.admin.toString()).emit("inboxList", inboxlist);
+      } 
+      else{
 
-          io.of("/inbox").to((chat.users[i].userId).toString()).emit("inboxList",inboxlist)
-        
+        const inboxlist = await Chat.find({
+          $or: [
+            { users: { $elemMatch: { userId: chat.admin } } },
+            { admin: chat.admin },
+          ],
+        }).sort({ "lastMessage.created_at": -1 })
+        const socket=io.of("/inbox")
+        socket.to(chat.admin.toString()).emit("inboxList", inboxlist);
+
+      }
+
+        for (let i = 0; i < chat.users.length; i++) {
+          // if (chat.users[i].admin.toString() != userId) {
+            // console.log(chat.users[i].userId,typeof(chat.users[i].userId))
+            // console.log(userId,typeof(userId))
+            const inboxlist = await Chat.find({
+              $or: [
+                {
+                  users: {
+                    $elemMatch: {
+                      userId:
+                        chat.users[i].userId && chat.users[i].userId.toString(),
+                    },
+                  },
+                },
+                { admin: chat.users[i].userId.toString() },
+              ],
+            }).sort({ "lastMessage.created_at": -1 });
+
+            console.log("The chats are",inboxlist)
+
+            const socket=io.of("/inbox");
+
+            socket.to(chat.users[i].userId.toString())
+              .emit("inboxList", inboxlist);
+          // }
+        // }
       }
 
       // socket.emit("sentMessage",{msg:messages[0]})
@@ -61,24 +99,24 @@ function messageSocket(io) {
       socket.broadcast.emit("userTyping", { message: user });
     });
 
-    
-
-    // socket.on("sendMessage", async (information, callback) => {
-    //   const user = await User.findById(information.id);
-    //   const rm = await Chat.findById(information.room);
-    //   rm?.messages.push({ user: user._id, message: information.message });
-    //   await rm?.save();
-    //   const RM = await Chat.findById(information.room).populate({
-    //     path: "messages",
-    //     populate: [
-    //       {
-    //         path: "user",
-    //         model: "User",
-    //       },
-    //     ],
-    //   });
-    //   io.to(information.room).emit("allmessage", { messages: RM?.messages });
-    // });
+    socket.on("likeMessage", async ({ messageId, userId, room }) => {
+      const message = await Message.findOne({
+        _id: messageId,
+        "reactions.userId": userId,
+      });
+      if (message) {
+        await Message.updateOne(
+          { _id: messageId },
+          { $pull: { reactions: { userId: userId } } }
+        );
+        io.to(room).emit("reactionInMessage", { status: 0, msgId: messageId });
+      } else {
+        const msg = await Message.findOne({ _id: messageId });
+        msg.reactions.push({ userId: userId });
+        await msg.save();
+        io.to(room).emit("reactionInMessage", { status: 1, msgId: messageId });
+      }
+    });
 
     socket.on("yugal", (data) => {
       console.log("TYPING.........");

@@ -199,10 +199,10 @@ app.post(
 
     // const io=req.app.get("socketio")
     console.log(acceptor)
-    console.log(io)
-    io.to(req.params.roomid).emit("userRemoved",{"removed_user":acceptor})
+    console.log(io.sockets)
 
-    res.send("Removed");
+    io.to(req.params.roomid).emit("userRemoved",{"removed_user":acceptor})
+    res.send({"socket":"Soc"});
   })
 );
 

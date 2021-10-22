@@ -28,7 +28,6 @@ const messageSchema = new mongoose.Schema({
     reactions:{
       type:[reactionSchema],
       default:[]
-
     }
   },{timestamps:true});
 
