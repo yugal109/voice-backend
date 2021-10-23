@@ -10,10 +10,10 @@ try {
   });
 
   client.on_connect("error", (error) => {
-    console.log(error);
+    console.log("The error is ",error);
   });
 
   module.exports = client;
 } catch (error) {
-  console.log(error);
+  console.log('Redis errir ',error);
 }
