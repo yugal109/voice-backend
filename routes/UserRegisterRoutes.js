@@ -178,7 +178,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).send("User not found");
-
+    
     res.send(user.image);
   })
 );
@@ -193,6 +193,28 @@ router.put(
     if (req.user._id == user._id) {
       user.image = url;
       await user.save();
+      client.get(`USER-${req.params.id}`, async (error, USER) => {
+        if (error) {
+          console.log(error);
+        } else {
+          if (USER !== null) {
+           client.remove(`USER-${user._id}`)
+          client.setex(
+            `USER-${user._id}`,
+            100,
+            JSON.stringify({
+              _id: user.id,
+              username: user.username,
+              email: user.email,
+              fullname: user.fullname,
+              accountType: user.accountType,
+              image: user.image,
+            })
+          );
+  
+          }
+        }
+      });
       res.send("Updated Image");
     }
   })

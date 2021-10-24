@@ -25,6 +25,9 @@ const messageSchema = new mongoose.Schema({
       type: String,
       min: 1,
     },
+    image:{
+      type:String
+    },
     reactions:{
       type:[reactionSchema],
       default:[]
