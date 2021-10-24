@@ -36,6 +36,28 @@ function messageSocket(io) {
         );
   
         io.to(room).emit("messageFromServer", { msg: messages });
+      }else{
+        let mssg = new Message({
+          chatRoom: room,
+          image:url,
+          user: userId,
+        });
+  
+        await mssg.save();
+
+        const chat = await Chat.findById(room);
+        chat.lastMessage = {
+          user: userId,
+          message: "Image was sent .",
+          created_at: new Date(),
+        };
+        await chat.save();
+  
+        const messages = await Message.findOne({ _id: mssg._id }).populate(
+          "user"
+        );
+
+        io.to(room).emit("messageFromServer", { msg: messages });
       }
   
 
