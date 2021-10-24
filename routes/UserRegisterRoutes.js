@@ -215,7 +215,7 @@ router.put(
           }
         }
       });
-      res.send("Updated Image");
+      res.send(user);
     }
   })
 );
