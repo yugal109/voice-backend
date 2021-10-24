@@ -13,28 +13,32 @@ function messageSocket(io) {
       socket.join(room);
     });
 
-    socket.on("messageSend", async ({ message, userId, room }, callback) => {
-      let mssg = new Message({
-        chatRoom: room,
-        message,
-        user: userId,
-      });
+    socket.on("messageSend", async ({ message, userId, room,url }, callback) => {
+      if(url===""){
+        let mssg = new Message({
+          chatRoom: room,
+          message,
+          user: userId,
+        });
+  
+        await mssg.save();
+  
+        const chat = await Chat.findById(room);
+        chat.lastMessage = {
+          user: userId,
+          message: message,
+          created_at: new Date(),
+        };
+        await chat.save();
+  
+        const messages = await Message.findOne({ _id: mssg._id }).populate(
+          "user"
+        );
+  
+        io.to(room).emit("messageFromServer", { msg: messages });
+      }
+  
 
-      await mssg.save();
-
-      const chat = await Chat.findById(room);
-      chat.lastMessage = {
-        user: userId,
-        message: message,
-        created_at: new Date(),
-      };
-      await chat.save();
-
-      const messages = await Message.findOne({ _id: mssg._id }).populate(
-        "user"
-      );
-
-      io.to(room).emit("messageFromServer", { msg: messages });
       // console.log(chat.admin);
       // console.log(userId);
 
