@@ -198,7 +198,7 @@ router.put(
           console.log(error);
         } else {
           if (USER !== null) {
-           client.remove(`USER-${user._id}`)
+           client.del(`USER-${user._id}`)
           client.setex(
             `USER-${user._id}`,
             100,
