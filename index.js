@@ -195,7 +195,7 @@ app.post(
       requestor: req.user._id,
       acceptor,
     });
-    // await chat.save();
+    await chat.save();
 
     // const io=req.app.get("socketio")
     console.log(acceptor)
