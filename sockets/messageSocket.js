@@ -36,35 +36,7 @@ function messageSocket(io) {
         );
   
         io.to(room).emit("messageFromServer", { msg: messages });
-      }else{
-        let mssg = new Message({
-          chatRoom: room,
-          image:url,
-          user: userId,
-        });
-  
-        await mssg.save();
 
-        const chat = await Chat.findById(room);
-        chat.lastMessage = {
-          user: userId,
-          message: "Image was sent .",
-          created_at: new Date(),
-        };
-        await chat.save();
-  
-        const messages = await Message.findOne({ _id: mssg._id }).populate(
-          "user"
-        );
-
-        io.to(room).emit("messageFromServer", { msg: messages });
-      }
-  
-
-      // console.log(chat.admin);
-      // console.log(userId);
-
-      // console.log(chat.admin == userId);
 
       if (chat.admin == userId) {
         const inboxlist = await Chat.find({
@@ -117,7 +89,83 @@ function messageSocket(io) {
         // }
       }
 
-      // socket.emit("sentMessage",{msg:messages[0]})
+      }else{
+        let mssg = new Message({
+          chatRoom: room,
+          image:url,
+          user: userId,
+        });
+  
+        await mssg.save();
+
+        const chat = await Chat.findById(room);
+        chat.lastMessage = {
+          user: userId,
+          message: "Image was sent .",
+          created_at: new Date(),
+        };
+        await chat.save();
+  
+        const messages = await Message.findOne({ _id: mssg._id }).populate(
+          "user"
+        );
+
+        io.to(room).emit("messageFromServer", { msg: messages });
+
+
+      if (chat.admin == userId) {
+        const inboxlist = await Chat.find({
+          $or: [
+            { users: { $elemMatch: { userId: userId } } },
+            { admin: userId },
+          ],
+        }).sort({ "lastMessage.created_at": -1 })
+        const socket=io.of("/inbox")
+        socket.to(chat.admin.toString()).emit("inboxList", inboxlist);
+      } 
+      else{
+
+        const inboxlist = await Chat.find({
+          $or: [
+            { users: { $elemMatch: { userId: chat.admin } } },
+            { admin: chat.admin },
+          ],
+        }).sort({ "lastMessage.created_at": -1 })
+        const socket=io.of("/inbox")
+        socket.to(chat.admin.toString()).emit("inboxList", inboxlist);
+
+      }
+
+        for (let i = 0; i < chat.users.length; i++) {
+          // if (chat.users[i].admin.toString() != userId) {
+            // console.log(chat.users[i].userId,typeof(chat.users[i].userId))
+            // console.log(userId,typeof(userId))
+            const inboxlist = await Chat.find({
+              $or: [
+                {
+                  users: {
+                    $elemMatch: {
+                      userId:
+                        chat.users[i].userId && chat.users[i].userId.toString(),
+                    },
+                  },
+                },
+                { admin: chat.users[i].userId.toString() },
+              ],
+            }).sort({ "lastMessage.created_at": -1 });
+
+            console.log("The chats are",inboxlist)
+
+            const socket=io.of("/inbox");
+
+            socket.to(chat.users[i].userId.toString())
+              .emit("inboxList", inboxlist);
+          // }
+        // }
+      }
+      
+      }
+
     });
 
     socket.on("typing", ({ user }) => {
