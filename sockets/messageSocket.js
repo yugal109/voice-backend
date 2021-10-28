@@ -6,12 +6,30 @@ const res = require("express/lib/response");
 
 function messageSocket(io) {
   io.on("connection", (socket) => {
+
+
     socket.on("join", async ({ id, room }) => {
       console.log("JOINEDDDDDDDD", room);
-      // const user = await User.findById(id);
-      // if (!user) return callback({ error: "User doesnot exist" });
       socket.join(room);
     });
+
+///VIDEO CHAT RELATED
+  socket.emit("me", socket.id);
+
+	socket.on("disconnect", () => {
+		socket.broadcast.emit("callEnded")
+	});
+
+	socket.on("callUser", ({ userToCall, signalData, from, name }) => {
+		io.to(userToCall).emit("callUser", { signal: signalData, from, name });
+	});
+
+	socket.on("answerCall", (data) => {
+		io.to(data.to).emit("callAccepted", data.signal)
+	});
+
+  //VIDEO CHAT RELATED
+
 
     socket.on("messageSend", async ({ message, userId, room,url }, callback) => {
       if(url===""){
@@ -85,8 +103,6 @@ function messageSocket(io) {
 
             socket.to(chat.users[i].userId.toString())
               .emit("inboxList", inboxlist);
-          // }
-        // }
       }
 
       }else{
@@ -137,9 +153,7 @@ function messageSocket(io) {
       }
 
         for (let i = 0; i < chat.users.length; i++) {
-          // if (chat.users[i].admin.toString() != userId) {
-            // console.log(chat.users[i].userId,typeof(chat.users[i].userId))
-            // console.log(userId,typeof(userId))
+
             const inboxlist = await Chat.find({
               $or: [
                 {
@@ -160,8 +174,6 @@ function messageSocket(io) {
 
             socket.to(chat.users[i].userId.toString())
               .emit("inboxList", inboxlist);
-          // }
-        // }
       }
       
       }
@@ -192,6 +204,7 @@ function messageSocket(io) {
       }
     });
 
+    
     socket.on("yugal", (data) => {
       console.log("TYPING.........");
     });
