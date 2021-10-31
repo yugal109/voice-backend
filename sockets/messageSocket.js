@@ -11,6 +11,7 @@ function messageSocket(io) {
     socket.on("join", async ({ id, room }) => {
       const user=await User.findById(id)
       socket.join(room);
+      socket.emit("notification",{user:user})
       socket.broadcast.emit("notification",{user:user})
     });
 
