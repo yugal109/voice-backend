@@ -9,8 +9,9 @@ function messageSocket(io) {
 
 
     socket.on("join", async ({ id, room }) => {
-      console.log("JOINEDDDDDDDD", room);
+      const user=await User.findById(id)
       socket.join(room);
+      socket.broadcast.emit("notification",{user:user})
     });
 
 ///VIDEO CHAT RELATED
